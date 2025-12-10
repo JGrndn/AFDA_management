@@ -145,13 +145,6 @@ export function MemberForm({ initialData, onSubmit, onCancel, isLoading }: Membe
               required
             />
 
-            <FormField
-              label="Relation"
-              name="guardianRelation"
-              value={formData.guardianRelation}
-              onChange={(v) => updateField('guardianRelation', v)}
-              placeholder="e.g., Parent, Legal Guardian"
-            />
           </div>
         </>
       )}
