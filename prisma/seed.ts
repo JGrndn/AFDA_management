@@ -30,6 +30,16 @@ async function main() {
     },
   });
   console.log('✅ Season created:', season.label);
+  const season2 = await prisma.season.create({
+    data: {
+      startYear: 2023,
+      endYear: 2024,
+      label: '2023-2024',
+      membershipAmount: 50.00,
+      isActive: false,
+    },
+  });
+  console.log('✅ Season created:', season2.label);
 
   // Create workshops
   const dancingWorkshop = await prisma.workshop.create({
@@ -64,6 +74,7 @@ async function main() {
       { workshopId: dancingWorkshop.id, seasonId: season.id, amount: 150.00 },
       { workshopId: theaterWorkshop.id, seasonId: season.id, amount: 120.00 },
       { workshopId: musicWorkshop.id, seasonId: season.id, amount: 200.00 },
+      { workshopId: theaterWorkshop.id, seasonId: season2.id, amount: 110.00 }
     ],
   });
   console.log('✅ Workshop prices created');
