@@ -3,10 +3,11 @@ import { seasonService } from '@/lib/services/seasons';
 
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const season = await seasonService.getById(parseInt(params.id));
+    const {id} = await params;
+    const season = await seasonService.getById(parseInt(id));
     if (!season) {
       return NextResponse.json({ error: 'Season not found' }, { status: 404 });
     }
@@ -18,11 +19,12 @@ export async function GET(
 
 export async function PUT(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const {id} = await params;
     const data = await request.json();
-    const season = await seasonService.update(parseInt(params.id), data);
+    const season = await seasonService.update(parseInt(id), data);
     return NextResponse.json(season);
   } catch (error) {
     return NextResponse.json({ error: 'Failed to update season' }, { status: 500 });
@@ -31,10 +33,11 @@ export async function PUT(
 
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    await seasonService.delete(parseInt(params.id));
+    const {id} = await params;
+    await seasonService.delete(parseInt(id));
     return NextResponse.json({ success: true });
   } catch (error) {
     return NextResponse.json({ error: 'Failed to delete season' }, { status: 500 });

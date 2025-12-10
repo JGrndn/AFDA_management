@@ -1,17 +1,17 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { MemberForm } from '@/components/members/MemberForm';
-import { useMemberMutations } from '@/hooks/useMutations';
+import { SeasonForm } from '@/components/seasons/SeasonForm';
+import { useSeasonMutations } from '@/hooks/useMutations';
 
-export default function NewMemberPage() {
+export default function NewSeasonPage() {
   const router = useRouter();
-  const { createMember, isLoading, error } = useMemberMutations();
+  const { createSeason, isLoading, error } = useSeasonMutations();
 
   const handleSubmit = async (data: any) => {
-    const result = await createMember(data);
+    const result = await createSeason(data);
     if (result) {
-      router.push('/members');
+      router.push('/seasons');
     }
   };
 
@@ -22,9 +22,9 @@ export default function NewMemberPage() {
           {error}
         </div>
       )}
-      <MemberForm
+      <SeasonForm
         onSubmit={handleSubmit}
-        onCancel={() => router.push('/members')}
+        onCancel={() => router.push('/seasons')}
         isLoading={isLoading}
       />
     </div>

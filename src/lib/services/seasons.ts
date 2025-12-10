@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/prisma';
 import { Prisma } from '@/generated/prisma/client';
+import { extractScalarFields } from '@/lib/utils';
 
 export const seasonService = {
   async getAll() {
@@ -37,7 +38,11 @@ export const seasonService = {
   },
 
   async update(id: number, data: Prisma.SeasonUpdateInput) {
-    return prisma.season.update({ where: { id }, data });
+    const cleanData = extractScalarFields(data) as Prisma.SeasonUpdateInput;
+    return prisma.season.update({
+      where: { id },
+       data: cleanData
+    });
   },
 
   async setActive(id: number) {
