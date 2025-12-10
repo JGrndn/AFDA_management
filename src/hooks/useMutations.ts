@@ -175,3 +175,41 @@ export function usePaymentMutations() {
     error: api.error,
   };
 }
+
+export function useFamilyMutations() {
+  const api = useApi();
+
+  const createFamily = async (data: any) => {
+    return api.execute(
+      fetch('/api/families', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      })
+    );
+  };
+
+  const updateFamily = async (id: number, data: any) => {
+    return api.execute(
+      fetch(`/api/families/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      })
+    );
+  };
+
+  const deleteFamily = async (id: number) => {
+    return api.execute(
+      fetch(`/api/families/${id}`, { method: 'DELETE' })
+    );
+  };
+
+  return {
+    createFamily,
+    updateFamily,
+    deleteFamily,
+    isLoading: api.isLoading,
+    error: api.error,
+  };
+}

@@ -8,8 +8,6 @@ import { MemberForm } from '@/components/members/MemberForm';
 import { WorkshopRegistrationManager } from '@/components/members/WorkshopRegistrationManager';
 import { MembershipManager } from '@/components/members/MembershipManager';
 import { Button, Card, StatusBadge } from '@/components/ui';
-import Link from 'next/link';
-import { ArrowLeft } from 'lucide-react';
 
 export default function MemberDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
@@ -56,13 +54,6 @@ export default function MemberDetailPage({ params }: { params: Promise<{ id: str
 
   return (
     <div className="container mx-auto p-6 max-w-4xl">
-      <Link
-        href="/members"
-        className="mb-2 inline-flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900"
-      >
-        <ArrowLeft className="h-4 w-4" />
-        Retour
-      </Link>
       <div className="mb-6 flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold">
