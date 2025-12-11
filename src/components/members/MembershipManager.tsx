@@ -92,15 +92,17 @@ export function MembershipManager({ member, onUpdate }: MembershipManagerProps) 
   };
 
   const sortedMemberships = member.memberships
-    ? [...member.memberships].sort((a: any, b: any) => b.season.startYear - a.season.startYear)
+    ? [...member.memberships]
+        .filter((m: any) => m.season.isActive) // Ne garder que la saison active
+        .sort((a: any, b: any) => b.season.startYear - a.season.startYear)
     : [];
 
   return (
     <>
       <Card 
-        title="Memberships"
+        title="Membership"
         actions={
-          availableSeasons.length > 0 && (
+          availableSeasons.filter((s: any) => s.isActive).length > 0 && (
             <Button size="sm" onClick={handleOpenModal}>
               Add Membership
             </Button>

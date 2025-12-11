@@ -1,4 +1,3 @@
-// src/components/members/WorkshopRegistrationManager.tsx
 'use client';
 
 import { useState } from 'react';
@@ -101,87 +100,73 @@ export function WorkshopRegistrationManager({
           )
         }
       >
-        <div className="space-y-4">
-          {/* Info : on ne peut gérer que la saison active */}
-          {activeSeason && !activeRegistration && (
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-              <div className="flex items-start">
-                <svg className="w-5 h-5 text-blue-600 mr-3 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                <div>
-                  <h4 className="font-semibold text-blue-900">No registration for {activeSeason.label}</h4>
-                  <p className="text-sm text-blue-800 mt-1">
-                    Click the button above to register this member for the current season.
-                  </p>
+        {activeSeason ? (
+          <div>
+            {/* Info : on ne peut gérer que la saison active */}
+            {!activeRegistration ? (
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <div className="flex items-start">
+                  <svg className="w-5 h-5 text-blue-600 mr-3 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <div>
+                    <h4 className="font-semibold text-blue-900">No registration for {activeSeason.label}</h4>
+                    <p className="text-sm text-blue-800 mt-1">
+                      Click the button above to register this member for the current season.
+                    </p>
+                  </div>
                 </div>
               </div>
-            </div>
-          )}
-
-          {/* Inscriptions par saison triées */}
-          {member.registrations && member.registrations.length > 0 ? (
-            member.registrations
-              .sort((a: any, b: any) => b.season.startYear - a.season.startYear)
-              .map((reg: any) => {
-                const isActiveSeason = reg.seasonId === activeSeason?.id;
-                return (
-                  <div key={reg.id} className={`border rounded-lg p-4 ${isActiveSeason ? 'border-blue-400 bg-blue-50' : ''}`}>
-                    <div className="flex justify-between items-start mb-3">
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <h4 className="font-semibold text-lg">{reg.season.label}</h4>
-                          {isActiveSeason && (
-                            <span className="px-2 py-0.5 bg-blue-600 text-white text-xs rounded-full">
-                              Active
-                            </span>
-                          )}
-                        </div>
-                        <div className="text-sm text-gray-500 mt-1">
-                          Family Order: {reg.familyOrder}
-                          {reg.familyOrder > 1 && (
-                            <span className="ml-2 text-green-600">(10% discount)</span>
-                          )}
-                        </div>
-                      </div>
-                      <StatusBadge status={reg.status} />
+            ) : (
+              <div className="border rounded-lg p-4 bg-blue-50 border-blue-400">
+                <div className="flex justify-between items-start mb-3">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h4 className="font-semibold text-lg">{activeRegistration.season.label}</h4>
+                      <span className="px-2 py-0.5 bg-blue-600 text-white text-xs rounded-full">
+                        Active
+                      </span>
                     </div>
-                    
-                    {reg.workshopRegistrations.length > 0 ? (
-                      <div className="mt-3">
-                        <h5 className="text-sm font-medium text-gray-700 mb-2">Workshops:</h5>
-                        <ul className="space-y-2">
-                          {reg.workshopRegistrations.map((wr: any) => (
-                            <li key={wr.id} className="flex justify-between items-center bg-white p-2 rounded">
-                              <span className="text-sm">{wr.workshop.name}</span>
-                              <div className="text-sm text-right">
-                                <span className="font-semibold">€{Number(wr.appliedPrice).toFixed(2)}</span>
-                                {wr.discountPercent > 0 && (
-                                  <span className="ml-2 text-xs text-green-600">
-                                    (-{wr.discountPercent}%)
-                                  </span>
-                                )}
-                              </div>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    ) : (
-                      <p className="text-sm text-gray-500 italic">No workshops selected</p>
-                    )}
-                    
-                    {!isActiveSeason && (
-                      <div className="mt-3 text-xs text-gray-500 italic">
-                        Past season - Cannot be modified
-                      </div>
-                    )}
+                    <div className="text-sm text-gray-600 mt-1">
+                      Family Order: {activeRegistration.familyOrder}
+                      {activeRegistration.familyOrder > 1 && (
+                        <span className="ml-2 text-green-600">(10% discount)</span>
+                      )}
+                    </div>
                   </div>
-                );
-              })
-          ) : (
-            <p className="text-gray-500">No registrations yet</p>
-          )}
-        </div>
+                  <StatusBadge status={activeRegistration.status} />
+                </div>
+                
+                {activeRegistration.workshopRegistrations.length > 0 ? (
+                  <div className="mt-3">
+                    <h5 className="text-sm font-medium text-gray-700 mb-2">Workshops:</h5>
+                    <ul className="space-y-2">
+                      {activeRegistration.workshopRegistrations.map((wr: any) => (
+                        <li key={wr.id} className="flex justify-between items-center bg-white p-2 rounded">
+                          <span className="text-sm">{wr.workshop.name}</span>
+                          <div className="text-sm text-right">
+                            <span className="font-semibold">€{Number(wr.appliedPrice).toFixed(2)}</span>
+                            {wr.discountPercent > 0 && (
+                              <span className="ml-2 text-xs text-green-600">
+                                (-{wr.discountPercent}%)
+                              </span>
+                            )}
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ) : (
+                  <p className="text-sm text-gray-500 italic mt-3">No workshops selected</p>
+                )}
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="text-center py-8 text-gray-500">
+            No active season available
+          </div>
+        )}
       </Card>
 
       {/* Modal pour gérer les ateliers */}

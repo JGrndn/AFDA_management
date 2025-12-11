@@ -9,9 +9,9 @@ export default function NewMemberPage() {
   const { createMember, isLoading, error } = useMemberMutations();
 
   const handleSubmit = async (data: any) => {
-    const result = await createMember(data);
+    const result:any = await createMember(data);
     if (result) {
-      router.push('/members');
+      router.push(`/members/${result.id}`);
     }
   };
 
