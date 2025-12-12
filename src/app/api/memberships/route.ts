@@ -16,7 +16,6 @@ export async function GET(request: Request) {
       include: {
         member: true,
         season: true,
-        paymentMemberships: { include: { paymentGroup: true } },
       },
       orderBy: { membershipDate: 'desc' },
     });

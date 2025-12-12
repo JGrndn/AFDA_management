@@ -167,10 +167,17 @@ export function usePaymentMutations() {
     );
   };
 
+  const deletePayment = async (id: number) => {
+    return api.execute(
+      fetch(`/api/payments/${id}`, { method: 'DELETE' })
+    );
+  };
+
   return {
     createPayment,
     updatePayment,
     cashPayment,
+    deletePayment,
     isLoading: api.isLoading,
     error: api.error,
   };

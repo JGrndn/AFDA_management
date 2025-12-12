@@ -29,13 +29,11 @@ export const memberService = {
           include: {
             season: true,
             workshopRegistrations: { include: { workshop: true } },
-            paymentRegistrations: { include: { paymentGroup: true } },
           },
         },
         memberships: {
           include: {
             season: true,
-            paymentMemberships: { include: { paymentGroup: true } },
           },
         },
       },

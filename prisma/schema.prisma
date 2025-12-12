@@ -11,7 +11,6 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url = env("DATABASE_URL")
 }
 
 model Season {
@@ -21,11 +20,13 @@ model Season {
   label             String   @db.VarChar(50)
   membershipAmount  Decimal  @map("membership_amount") @db.Decimal(10, 2)
   isActive          Boolean  @default(false) @map("is_active")
+  totalDonations Decimal @default(0) @map("total_donations") @db.Decimal(10, 2)
   createdAt         DateTime @default(now()) @map("created_at")
 
   registrations     Registration[]
   workshopPrices    WorkshopPrice[]
   memberships       Membership[]
+  payments          Payment[]
 
   @@unique([startYear, endYear])
   @@map("seasons")
@@ -39,7 +40,8 @@ model Family {
   email       String?  @db.VarChar(255)
   createdAt   DateTime @default(now()) @map("created_at")
 
-  members Member[]
+  members     Member[]
+  payments    Payment[]
 
   @@map("families")
 }
@@ -65,6 +67,7 @@ model Member {
   family        Family?        @relation(fields: [familyId], references: [id], onDelete: SetNull)
   registrations Registration[]
   memberships   Membership[]
+  payments      Payment[]
 
   @@index([familyId])
   @@index([lastName, firstName])
@@ -110,7 +113,6 @@ model Registration {
   member                Member                @relation(fields: [memberId], references: [id], onDelete: Cascade)
   season                Season                @relation(fields: [seasonId], references: [id], onDelete: Cascade)
   workshopRegistrations WorkshopRegistration[]
-  paymentRegistrations  PaymentRegistration[]
 
   @@unique([memberId, seasonId])
   @@index([memberId])
@@ -129,49 +131,10 @@ model WorkshopRegistration {
 
   registration          Registration          @relation(fields: [registrationId], references: [id], onDelete: Cascade)
   workshop              Workshop              @relation(fields: [workshopId], references: [id], onDelete: Cascade)
-  paymentRegistrations  PaymentRegistration[]
-
+  
   @@unique([registrationId, workshopId])
   @@index([registrationId])
   @@map("workshop_registrations")
-}
-
-model PaymentGroup {
-  id              Int       @id @default(autoincrement())
-  reference       String?   @unique @db.VarChar(50)
-  totalAmount     Decimal   @map("total_amount") @db.Decimal(10, 2)
-  paymentType     String    @map("payment_type") @db.VarChar(20)
-  paymentDate     DateTime  @map("payment_date") @db.Date
-  cashingDate     DateTime? @map("cashing_date") @db.Date
-  status          String    @default("pending") @db.VarChar(20)
-  notes           String?   @db.Text
-  createdAt       DateTime  @default(now()) @map("created_at")
-  updatedAt       DateTime  @default(now()) @updatedAt @map("updated_at")
-
-  paymentRegistrations  PaymentRegistration[]
-  paymentMemberships    PaymentMembership[]
-
-  @@index([status])
-  @@index([cashingDate])
-  @@map("payment_groups")
-}
-
-model PaymentRegistration {
-  id                      Int      @id @default(autoincrement())
-  paymentGroupId          Int      @map("payment_group_id")
-  registrationId          Int      @map("registration_id")
-  allocatedAmount         Decimal  @map("allocated_amount") @db.Decimal(10, 2)
-  amountType              String   @map("amount_type") @db.VarChar(20)
-  workshopRegistrationId  Int?     @map("workshop_registration_id")
-  createdAt               DateTime @default(now()) @map("created_at")
-
-  paymentGroup          PaymentGroup          @relation(fields: [paymentGroupId], references: [id], onDelete: Cascade)
-  registration          Registration          @relation(fields: [registrationId], references: [id], onDelete: Cascade)
-  workshopRegistration  WorkshopRegistration? @relation(fields: [workshopRegistrationId], references: [id], onDelete: SetNull)
-
-  @@index([paymentGroupId])
-  @@index([registrationId])
-  @@map("payment_registrations")
 }
 
 model Membership {
@@ -185,7 +148,6 @@ model Membership {
 
   member  Member  @relation(fields: [memberId], references: [id], onDelete: Cascade)
   season  Season  @relation(fields: [seasonId], references: [id], onDelete: Cascade)
-  paymentMemberships PaymentMembership[]
 
   @@unique([memberId, seasonId])
   @@index([memberId])
@@ -193,17 +155,31 @@ model Membership {
   @@map("memberships")
 }
 
-model PaymentMembership {
-  id              Int      @id @default(autoincrement())
-  paymentGroupId  Int      @map("payment_group_id")
-  membershipId    Int      @map("membership_id")
-  allocatedAmount Decimal  @map("allocated_amount") @db.Decimal(10, 2)
-  createdAt       DateTime @default(now()) @map("created_at")
-
-  paymentGroup  PaymentGroup  @relation(fields: [paymentGroupId], references: [id], onDelete: Cascade)
-  membership    Membership    @relation(fields: [membershipId], references: [id], onDelete: Cascade)
-
-  @@index([paymentGroupId])
-  @@index([membershipId])
-  @@map("payment_memberships")
+model Payment {
+  id           Int       @id @default(autoincrement())
+  familyId     Int?      @map("family_id")
+  memberId     Int?      @map("member_id")
+  seasonId     Int       @map("season_id")
+  
+  amount       Decimal   @db.Decimal(10, 2)
+  paymentType  String    @map("payment_type") @db.VarChar(20) // cash, check, transfer, card
+  paymentDate  DateTime  @map("payment_date") @db.Date
+  cashingDate  DateTime? @map("cashing_date") @db.Date
+  status       String    @default("pending") @db.VarChar(20) // pending, cashed, cancelled
+  
+  reference    String?   @db.VarChar(50)
+  notes        String?   @db.Text
+  
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @default(now()) @updatedAt @map("updated_at")
+  
+  family       Family?   @relation(fields: [familyId], references: [id], onDelete: SetNull)
+  member       Member?   @relation(fields: [memberId], references: [id], onDelete: SetNull)
+  season       Season    @relation(fields: [seasonId], references: [id], onDelete: Cascade)
+  
+  @@index([familyId])
+  @@index([memberId])
+  @@index([seasonId])
+  @@index([status])
+  @@map("payments")
 }

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { familyService } from '@/lib/services/families';
+import { use } from 'react';
 
 export async function GET(
   request: Request,

@@ -11,7 +11,6 @@ export async function GET(
       include: {
         member: true,
         season: true,
-        paymentMemberships: { include: { paymentGroup: true } },
       },
     });
 

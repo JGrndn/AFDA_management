@@ -7,12 +7,18 @@ export async function POST(
 ) {
   try {
     const { cashingDate } = await request.json();
+
     const payment = await paymentService.markAsCashed(
       parseInt(params.id),
       new Date(cashingDate)
     );
+
     return NextResponse.json(payment);
-  } catch (error) {
-    return NextResponse.json({ error: 'Failed to cash payment' }, { status: 500 });
+  } catch (error: any) {
+    console.error('Error cashing payment:', error);
+    return NextResponse.json(
+      { error: error.message || 'Failed to cash payment' },
+      { status: 500 }
+    );
   }
 }

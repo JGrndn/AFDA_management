@@ -8,8 +8,6 @@ import { MemberForm } from '@/components/members/MemberForm';
 import { WorkshopRegistrationManager } from '@/components/members/WorkshopRegistrationManager';
 import { MembershipManager } from '@/components/members/MembershipManager';
 import { Button, Card, StatusBadge } from '@/components/ui';
-import { ArrowLeft } from 'lucide-react';
-import Link from 'next/link';
 
 export default function MemberDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
@@ -56,13 +54,6 @@ export default function MemberDetailPage({ params }: { params: Promise<{ id: str
 
   return (
     <div className="container mx-auto p-6 max-w-4xl">
-      <Link
-        href="/seasons"
-        className="mb-2 inline-flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900"
-      >
-        <ArrowLeft className="h-4 w-4" />
-        Retour
-      </Link>
       <div className="mb-6 flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold">
@@ -141,11 +132,26 @@ export default function MemberDetailPage({ params }: { params: Promise<{ id: str
                 <dt className="text-sm font-medium text-gray-500">Family</dt>
                 <dd className="mt-1 text-sm text-gray-900">
                   {member.family ? (
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => router.push(`/families/${member.family.id}`)}
+                        className="text-blue-600 hover:underline"
+                      >
+                        {member.family.name}
+                      </button>
+                      <button
+                        onClick={() => router.push(`/families/${member.family.id}#payments`)}
+                        className="text-sm text-blue-600 hover:underline"
+                      >
+                        (view payments)
+                      </button>
+                    </div>
+                  ) : member.id ? (
                     <button
-                      onClick={() => router.push(`/families/${member.family.id}`)}
-                      className="text-blue-600 hover:underline"
+                      onClick={() => router.push(`/members/${member.id}/payments`)}
+                      className="text-blue-600 hover:underline text-sm"
                     >
-                      {member.family.name}
+                      View payments
                     </button>
                   ) : (
                     '-'

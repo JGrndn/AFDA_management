@@ -1,16 +1,20 @@
 'use client';
 
-import { useState } from 'react';
+import { use, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useFamily } from '@/hooks/useFamilies';
 import { useFamilyMutations } from '@/hooks/useMutations';
+import { useActiveSeason } from '@/hooks/useSeasons';
 import { FamilyForm } from '@/components/families/FamilyForm';
+import { FamilyPaymentManager } from '@/components/families/FamilyPaymentManager';
 import { Button, Card } from '@/components/ui';
 
-export default function FamilyDetailPage({ params }: { params: { id: string } }) {
+export default function FamilyDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
-  const familyId = parseInt(params.id);
+  const resolvedParams = use(params);
+  const familyId = parseInt(resolvedParams.id);
   const { family, isLoading: familyLoading, mutate } = useFamily(familyId);
+  const { season: activeSeason } = useActiveSeason();
   const { updateFamily, deleteFamily, isLoading: mutationLoading, error } = useFamilyMutations();
   const [isEditing, setIsEditing] = useState(false);
 
@@ -130,6 +134,17 @@ export default function FamilyDetailPage({ params }: { params: { id: string } })
               </div>
             )}
           </Card>
+
+          {/* Composant de gestion des paiements */}
+          {activeSeason && (
+            <div id="payments">
+              <FamilyPaymentManager 
+                family={family}
+                season={activeSeason}
+                onUpdate={mutate}
+              />
+            </div>
+          )}
         </div>
       )}
     </div>

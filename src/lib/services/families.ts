@@ -12,10 +12,26 @@ export const familyService = {
     });
   },
 
-  async getById(id: number) {
+async getById(id: number) {
     return prisma.family.findUnique({
       where: { id },
-      include: { members: true },
+      include: { 
+        members: {
+          include: {
+            memberships: {
+              include: { season: true }
+            },
+            registrations: {
+              include: {
+                season: true,
+                workshopRegistrations: {
+                  include: { workshop: true }
+                }
+              }
+            }
+          }
+        }
+      },
     });
   },
 

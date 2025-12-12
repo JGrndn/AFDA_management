@@ -9,7 +9,6 @@ export const registrationService = {
         member: { include: { family: true } },
         season: true,
         workshopRegistrations: { include: { workshop: true } },
-        paymentRegistrations: { include: { paymentGroup: true } },
       },
       orderBy: { registrationDate: 'desc' },
     });
@@ -22,12 +21,6 @@ export const registrationService = {
         member: { include: { family: true } },
         season: true,
         workshopRegistrations: { include: { workshop: true } },
-        paymentRegistrations: {
-          include: {
-            paymentGroup: true,
-            workshopRegistration: { include: { workshop: true } },
-          },
-        },
       },
     });
   },
@@ -114,20 +107,6 @@ export const registrationService = {
     const membershipAmount = Number(registration.season.membershipAmount);
 
     return workshopTotal + membershipAmount;
-  },
-
-  async getPaidAmount(registrationId: number) {
-    const payments = await prisma.paymentRegistration.findMany({
-      where: {
-        registrationId,
-        paymentGroup: {
-          status: { in: ['cashed', 'pending'] },
-        },
-      },
-      include: { paymentGroup: true },
-    });
-
-    return payments.reduce((sum, p) => sum + Number(p.allocatedAmount), 0);
   },
 
   async updateWorkshops(
