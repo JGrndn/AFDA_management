@@ -120,7 +120,6 @@ async function main() {
       guardianLastName: 'Dupont',
       guardianEmail: 'marie.dupont@example.com',
       guardianPhone: '0699887766',
-      guardianRelation: 'Mother',
     },
   });
 
@@ -145,7 +144,6 @@ async function main() {
       guardianLastName: 'Martin',
       guardianEmail: 'sophie.martin@example.com',
       guardianPhone: '0644556677',
-      guardianRelation: 'Mother',
     },
   });
 
@@ -187,7 +185,6 @@ async function main() {
       memberId: jean.id,
       seasonId: season2024.id,
       familyOrder: 1,
-      status: 'confirmed',
       workshopRegistrations: {
         create: [
           {
@@ -208,7 +205,6 @@ async function main() {
       memberId: lea.id,
       seasonId: season2024.id,
       familyOrder: 2,
-      status: 'pending',
       workshopRegistrations: {
         create: [
           {

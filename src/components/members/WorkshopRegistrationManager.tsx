@@ -21,7 +21,7 @@ export function WorkshopRegistrationManager({
   
   const { season: activeSeason } = useActiveSeason();
   const { workshops } = useWorkshops({ seasonId: activeSeason?.id });
-  const { createRegistration, isLoading, error } = useRegistrationMutations();
+  const { createRegistration, updateWorkshops, isLoading, error } = useRegistrationMutations();
 
   // Trouver l'inscription pour la saison active
   const activeRegistration = member.registrations?.find(
@@ -49,8 +49,6 @@ export function WorkshopRegistrationManager({
 
   const calculateTotal = () => {
     if (!activeSeason || !workshops) return 0;
-
-    const membershipAmount = Number(activeSeason.membershipAmount);
     const workshopTotal = workshops
       .filter((w: any) => selectedWorkshops.includes(w.id))
       .reduce((sum: number, w: any) => {
@@ -59,18 +57,27 @@ export function WorkshopRegistrationManager({
         return sum + Number(price) * discount;
       }, 0);
 
-    return membershipAmount + workshopTotal;
+    return workshopTotal;
   };
 
   const handleSubmit = async () => {
     if (!activeSeason) return;
-
-    const result = await createRegistration({
-      memberId: member.id,
-      seasonId: activeSeason.id,
-      workshopIds: selectedWorkshops,
-      familyOrder,
-    });
+    let result;
+    if (activeRegistration){
+      result = await updateWorkshops(
+        activeRegistration.id,
+        selectedWorkshops,
+        familyOrder
+      );
+    }
+    else {
+      result = await createRegistration({
+        memberId: member.id,
+        seasonId: activeSeason.id,
+        workshopIds: selectedWorkshops,
+        familyOrder,
+      });
+    }
 
     if (result) {
       setIsModalOpen(false);
@@ -134,7 +141,7 @@ export function WorkshopRegistrationManager({
                       )}
                     </div>
                   </div>
-                  <StatusBadge status={activeRegistration.status} />
+                  
                 </div>
                 
                 {activeRegistration.workshopRegistrations.length > 0 ? (
@@ -257,13 +264,6 @@ export function WorkshopRegistrationManager({
               <span className="text-2xl font-bold text-blue-600">
                 €{calculateTotal().toFixed(2)}
               </span>
-            </div>
-            <div className="mt-2 text-sm text-gray-600">
-              <div>Membership: €{activeSeason.membershipAmount}</div>
-              <div>
-                Workshops: €
-                {(calculateTotal() - Number(activeSeason.membershipAmount)).toFixed(2)}
-              </div>
             </div>
           </div>
 

@@ -175,8 +175,6 @@ export default function MemberDetailPage({ params }: { params: Promise<{ id: str
                   </dd>
                 </div>
                 <div>
-                  <dt className="text-sm font-medium text-gray-500">Relation</dt>
-                  <dd className="mt-1 text-sm text-gray-900">{member.guardianRelation || '-'}</dd>
                 </div>
                 <div>
                   <dt className="text-sm font-medium text-gray-500">Email</dt>

@@ -22,6 +22,7 @@ model Season {
   isActive          Boolean  @default(false) @map("is_active")
   totalDonations Decimal @default(0) @map("total_donations") @db.Decimal(10, 2)
   createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @default(now()) @updatedAt @map("updated_at")        
 
   registrations     Registration[]
   workshopPrices    WorkshopPrice[]
@@ -39,6 +40,7 @@ model Family {
   phone       String?  @db.VarChar(20)
   email       String?  @db.VarChar(255)
   createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
 
   members     Member[]
   payments    Payment[]
@@ -59,7 +61,6 @@ model Member {
   guardianFirstName String? @map("guardian_first_name") @db.VarChar(100)
   guardianPhone     String? @map("guardian_phone") @db.VarChar(20)
   guardianEmail     String? @map("guardian_email") @db.VarChar(255)
-  guardianRelation  String? @map("guardian_relation") @db.VarChar(50)
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
@@ -80,6 +81,7 @@ model Workshop {
   description String?  @db.Text
   isActive    Boolean  @default(true) @map("is_active")
   createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
 
   workshopPrices           WorkshopPrice[]
   workshopRegistrations    WorkshopRegistration[]
@@ -93,6 +95,7 @@ model WorkshopPrice {
   seasonId   Int      @map("season_id")
   amount     Decimal  @db.Decimal(10, 2)
   createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
 
   workshop Workshop @relation(fields: [workshopId], references: [id], onDelete: Cascade)
   season   Season   @relation(fields: [seasonId], references: [id], onDelete: Cascade)
@@ -107,8 +110,9 @@ model Registration {
   seasonId           Int      @map("season_id")
   registrationDate   DateTime @default(now()) @map("registration_date") @db.Date
   familyOrder        Int      @default(1) @map("family_order")
-  status             String   @default("pending") @db.VarChar(20)
+  
   createdAt          DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
 
   member                Member                @relation(fields: [memberId], references: [id], onDelete: Cascade)
   season                Season                @relation(fields: [seasonId], references: [id], onDelete: Cascade)
@@ -128,6 +132,7 @@ model WorkshopRegistration {
   discountPercent    Decimal  @default(0) @map("discount_percent") @db.Decimal(5, 2)
   registrationDate   DateTime @default(now()) @map("registration_date") @db.Date
   createdAt          DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
 
   registration          Registration          @relation(fields: [registrationId], references: [id], onDelete: Cascade)
   workshop              Workshop              @relation(fields: [workshopId], references: [id], onDelete: Cascade)
@@ -145,6 +150,7 @@ model Membership {
   status          String   @default("pending") @db.VarChar(20)
   membershipDate  DateTime @default(now()) @map("membership_date") @db.Date
   createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
 
   member  Member  @relation(fields: [memberId], references: [id], onDelete: Cascade)
   season  Season  @relation(fields: [seasonId], references: [id], onDelete: Cascade)

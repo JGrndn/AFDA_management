@@ -45,7 +45,6 @@ export const registrationService = {
         memberId,
         seasonId,
         familyOrder,
-        status: 'pending',
         workshopRegistrations: {
           create: workshopIds.map((workshopId) => {
             const price = season.workshopPrices.find(

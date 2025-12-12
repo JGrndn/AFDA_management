@@ -31,10 +31,12 @@ interface FamilyPaymentManagerProps {
 
 export function FamilyPaymentManager({ family, season, onUpdate }: FamilyPaymentManagerProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isCashingModalOpen, setIsCashingModalOpen] = useState(false);
+  const [selectedPaymentId, setSelectedPaymentId] = useState<number | null>(null);
+  const [cashingDate, setCashingDate] = useState(new Date().toISOString().split('T')[0]);
   const [payments, setPayments] = useState<any[]>([]);
   const [paymentStatus, setPaymentStatus] = useState<PaymentStatusType | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [cashingId, setCashingId] = useState<number | null>(null);
   const [validatingId, setValidatingId] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -117,16 +119,22 @@ export function FamilyPaymentManager({ family, season, onUpdate }: FamilyPayment
   };
 
   const handleValidatePayment = async (paymentId: number) => {
-    //if (!confirm('Validate this payment? This will mark it as cashed immediately.')) return;
+    setSelectedPaymentId(paymentId);
+    setCashingDate(new Date().toISOString().split('T')[0]);
+    setIsCashingModalOpen(true);
+  };
+
+  const handleConfirmCashing = async () => {
+    if (!selectedPaymentId) return;
     
-    setValidatingId(paymentId);
+    setValidatingId(selectedPaymentId);
     setError(null);
     
     try {
-      const response = await fetch(`/api/payments/${paymentId}/cash`, {
+      const response = await fetch(`/api/payments/${selectedPaymentId}/cash`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ cashingDate: new Date() }),
+        body: JSON.stringify({ cashingDate: new Date(cashingDate) }),
       });
 
       if (!response.ok) {
@@ -134,6 +142,8 @@ export function FamilyPaymentManager({ family, season, onUpdate }: FamilyPayment
         throw new Error(errorData.error || 'Failed to validate payment');
       }
 
+      setIsCashingModalOpen(false);
+      setSelectedPaymentId(null);
       await fetchPaymentData();
       onUpdate();
     } catch (error: any) {
@@ -401,6 +411,72 @@ export function FamilyPaymentManager({ family, season, onUpdate }: FamilyPayment
             </Button>
           </div>
         </form>
+      </Modal>
+
+      {/* Modal de validation avec date d'encaissement */}
+      <Modal
+        isOpen={isCashingModalOpen}
+        onClose={() => {
+          setIsCashingModalOpen(false);
+          setSelectedPaymentId(null);
+          setError(null);
+        }}
+        title="Validate Payment"
+        size="md"
+      >
+        <div className="space-y-4">
+          {error && (
+            <div className="p-3 bg-red-50 border border-red-200 rounded text-red-800 text-sm">
+              {error}
+            </div>
+          )}
+
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <p className="text-sm text-blue-800">
+              Please confirm the cashing date for this payment. This will mark it as cashed and update membership statuses.
+            </p>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Cashing Date *
+            </label>
+            <input
+              type="date"
+              value={cashingDate}
+              onChange={(e) => setCashingDate(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md"
+              required
+            />
+            <p className="mt-1 text-xs text-gray-500">
+              Default is today's date, but you can adjust it if needed
+            </p>
+          </div>
+
+          <div className="flex gap-3 pt-4 border-t">
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => {
+                setIsCashingModalOpen(false);
+                setSelectedPaymentId(null);
+                setError(null);
+              }}
+              disabled={validatingId !== null}
+              className="flex-1"
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              onClick={handleConfirmCashing}
+              disabled={validatingId !== null}
+              className="flex-1"
+            >
+              {validatingId !== null ? 'Validating...' : 'Validate Payment'}
+            </Button>
+          </div>
+        </div>
       </Modal>
     </>
   );
