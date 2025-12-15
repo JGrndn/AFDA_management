@@ -272,7 +272,7 @@ export function FamilyPaymentManager({ family, season, onUpdate }: FamilyPayment
                         <td className="px-4 py-2 text-sm">
                           {payment.cashingDate ? new Date(payment.cashingDate).toLocaleDateString() : '-'}
                         </td>
-                        <td className="px-4 py-2 text-sm">{payment.Notes}</td>
+                        <td className="px-4 py-2 text-sm">{payment.notes}</td>
                         <td className="px-4 py-2">
                           <StatusBadge status={payment.status} />
                         </td>
