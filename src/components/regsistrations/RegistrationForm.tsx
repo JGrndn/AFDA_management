@@ -52,7 +52,7 @@ export function RegistrationForm({ onSubmit, onCancel, isLoading }: Registration
       .filter((w: any) => selectedWorkshops.includes(w.id))
       .reduce((sum: number, w: any) => {
         const price = w.workshopPrices?.[0]?.amount || 0;
-        const discount = familyOrder > 1 ? 0.9 : 1;
+        const discount = familyOrder > 1 ? (1-activeSeason.discountPercent/100) : 1;
         return sum + Number(price) * discount;
       }, 0);
 
@@ -115,7 +115,7 @@ export function RegistrationForm({ onSubmit, onCancel, isLoading }: Registration
           <div className="space-y-2">
             {workshops.map((workshop: any) => {
               const price = workshop.workshopPrices?.[0]?.amount || 0;
-              const discountedPrice = familyOrder > 1 ? price * 0.9 : price;
+              const discountedPrice = familyOrder > 1 ? price * (1-activeSeason.discountPercent/100) : price;
               const isSelected = selectedWorkshops.includes(workshop.id);
 
               return (
@@ -143,7 +143,7 @@ export function RegistrationForm({ onSubmit, onCancel, isLoading }: Registration
                     <div className="font-semibold">€{discountedPrice}</div>
                     {familyOrder > 1 && (
                       <div className="text-xs text-green-600">
-                        (10% discount)
+                        ({activeSeason.discountPercent}% discount)
                       </div>
                     )}
                   </div>

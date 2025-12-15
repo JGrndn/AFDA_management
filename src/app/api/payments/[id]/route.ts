@@ -3,10 +3,11 @@ import { paymentService } from '@/lib/services/payments';
 
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const payment = await paymentService.getById(parseInt(params.id));
+    const { id } = await params;
+    const payment = await paymentService.getById(parseInt(id));
 
     if (!payment) {
       return NextResponse.json(
@@ -27,11 +28,12 @@ export async function GET(
 
 export async function PUT(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const data = await request.json();
-    const payment = await paymentService.update(parseInt(params.id), data);
+    const payment = await paymentService.update(parseInt(id), data);
 
     return NextResponse.json(payment);
   } catch (error) {
@@ -45,10 +47,11 @@ export async function PUT(
 
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    await paymentService.delete(parseInt(params.id));
+    const { id } = await params;
+    await paymentService.delete(parseInt(id));
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error('Error deleting payment:', error);

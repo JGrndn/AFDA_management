@@ -1,13 +1,13 @@
 import { NextResponse } from 'next/server';
 import { familyService } from '@/lib/services/families';
-import { use } from 'react';
 
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const family = await familyService.getById(parseInt(params.id));
+    const { id } = await params;
+    const family = await familyService.getById(parseInt(id));
     if (!family) {
       return NextResponse.json({ error: 'Family not found' }, { status: 404 });
     }
@@ -19,11 +19,12 @@ export async function GET(
 
 export async function PUT(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const data = await request.json();
-    const family = await familyService.update(parseInt(params.id), data);
+    const family = await familyService.update(parseInt(id), data);
     return NextResponse.json(family);
   } catch (error) {
     return NextResponse.json({ error: 'Failed to update family' }, { status: 500 });
@@ -32,10 +33,11 @@ export async function PUT(
 
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    await familyService.delete(parseInt(params.id));
+    const { id } = await params;
+    await familyService.delete(parseInt(id));
     return NextResponse.json({ success: true });
   } catch (error) {
     return NextResponse.json({ error: 'Failed to delete family' }, { status: 500 });

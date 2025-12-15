@@ -3,8 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { usePayments } from '@/hooks/usePayments';
-import { usePaymentMutations } from '@/hooks/useMutations';
-import { DataTable, Button, StatusBadge, Card } from '@/components/ui';
+import { DataTable, Button, StatusBadge, Card, Modal } from '@/components/ui';
 
 export default function PaymentsPage() {
   const router = useRouter();
@@ -12,14 +11,45 @@ export default function PaymentsPage() {
   const { payments, isLoading, mutate } = usePayments({
     uncashedOnly: filter === 'uncashed',
   });
-  const { cashPayment } = usePaymentMutations();
+  
+  const [isCashingModalOpen, setIsCashingModalOpen] = useState(false);
+  const [selectedPaymentId, setSelectedPaymentId] = useState<number | null>(null);
+  const [cashingDate, setCashingDate] = useState(new Date().toISOString().split('T')[0]);
+  const [cashingLoading, setCashingLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleCashPayment = async (paymentId: number) => {
-    if (confirm('Mark this payment as cashed?')) {
-      const result = await cashPayment(paymentId, new Date());
-      if (result) {
-        mutate();
+  const handleOpenCashingModal = (paymentId: number) => {
+    setSelectedPaymentId(paymentId);
+    setCashingDate(new Date().toISOString().split('T')[0]);
+    setError(null);
+    setIsCashingModalOpen(true);
+  };
+
+  const handleConfirmCashing = async () => {
+    if (!selectedPaymentId) return;
+
+    setCashingLoading(true);
+    setError(null);
+
+    try {
+      const response = await fetch(`/api/payments/${selectedPaymentId}/cash`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ cashingDate: new Date(cashingDate) }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to cash payment');
       }
+
+      setIsCashingModalOpen(false);
+      setSelectedPaymentId(null);
+      await mutate();
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setCashingLoading(false);
     }
   };
 
@@ -28,6 +58,18 @@ export default function PaymentsPage() {
       key: 'reference',
       label: 'Reference',
       render: (payment: any) => payment.reference || '-',
+    },
+    {
+      key: 'family',
+      label: 'Family/Member',
+      render: (payment: any) => {
+        if (payment.family) {
+          return payment.family.name;
+        } else if (payment.member) {
+          return `${payment.member.firstName} ${payment.member.lastName}`;
+        }
+        return '-';
+      },
     },
     {
       key: 'paymentType',
@@ -39,7 +81,7 @@ export default function PaymentsPage() {
     {
       key: 'totalAmount',
       label: 'Amount',
-      render: (payment: any) => `€${Number(payment.totalAmount).toFixed(2)}`,
+      render: (payment: any) => `€${Number(payment.totalAmount || payment.amount).toFixed(2)}`,
     },
     {
       key: 'paymentDate',
@@ -61,12 +103,12 @@ export default function PaymentsPage() {
       key: 'actions',
       label: 'Actions',
       render: (payment: any) =>
-        payment.paymentType === 'check' && !payment.cashingDate ? (
+        payment.status === 'pending' ? (
           <Button
             size="sm"
-            onClick={(e: Event) => {
+            onClick={(e) => {
               e.stopPropagation();
-              handleCashPayment(payment.id);
+              handleOpenCashingModal(payment.id);
             }}
           >
             Cash
@@ -83,9 +125,6 @@ export default function PaymentsPage() {
     <div className="container mx-auto p-6">
       <div className="mb-6 flex justify-between items-center">
         <h1 className="text-3xl font-bold">Payments</h1>
-        <Button onClick={() => router.push('/payments/new')}>
-          Record Payment
-        </Button>
       </div>
 
       {uncashedChecks > 0 && (
@@ -134,10 +173,76 @@ export default function PaymentsPage() {
       <DataTable
         data={payments}
         columns={columns}
-        onRowClick={(payment: any) => router.push(`/payments/${payment.id}`)}
+        onRowClick={(payment) => router.push(`/payments/${payment.id}`)}
         isLoading={isLoading}
         emptyMessage="No payments found"
       />
+
+      {/* Modal d'encaissement */}
+      <Modal
+        isOpen={isCashingModalOpen}
+        onClose={() => {
+          setIsCashingModalOpen(false);
+          setSelectedPaymentId(null);
+          setError(null);
+        }}
+        title="Cash Payment"
+        size="md"
+      >
+        <div className="space-y-4">
+          {error && (
+            <div className="p-3 bg-red-50 border border-red-200 rounded text-red-800 text-sm">
+              {error}
+            </div>
+          )}
+
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <p className="text-sm text-blue-800">
+              Please confirm the cashing date for this payment.
+            </p>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Cashing Date *
+            </label>
+            <input
+              type="date"
+              value={cashingDate}
+              onChange={(e) => setCashingDate(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md"
+              required
+            />
+            <p className="mt-1 text-xs text-gray-500">
+              Default is today's date, but you can adjust it if needed
+            </p>
+          </div>
+
+          <div className="flex gap-3 pt-4 border-t">
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => {
+                setIsCashingModalOpen(false);
+                setSelectedPaymentId(null);
+                setError(null);
+              }}
+              disabled={cashingLoading}
+              className="flex-1"
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              onClick={handleConfirmCashing}
+              disabled={cashingLoading}
+              className="flex-1"
+            >
+              {cashingLoading ? 'Cashing...' : 'Cash Payment'}
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }

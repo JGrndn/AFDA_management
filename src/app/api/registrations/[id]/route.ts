@@ -3,10 +3,11 @@ import { registrationService } from '@/lib/services/registrations';
 
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const registration = await registrationService.getById(parseInt(params.id));
+    const { id } = await params;
+    const registration = await registrationService.getById(parseInt(id));
     if (!registration) {
       return NextResponse.json({ error: 'Registration not found' }, { status: 404 });
     }
@@ -18,11 +19,12 @@ export async function GET(
 
 export async function PUT(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const data = await request.json();
-    const registration = await registrationService.update(parseInt(params.id), data);
+    const registration = await registrationService.update(parseInt(id), data);
     return NextResponse.json(registration);
   } catch (error) {
     return NextResponse.json({ error: 'Failed to update registration' }, { status: 500 });
@@ -31,10 +33,11 @@ export async function PUT(
 
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    await registrationService.delete(parseInt(params.id));
+    const { id } = await params;
+    await registrationService.delete(parseInt(id));
     return NextResponse.json({ success: true });
   } catch (error) {
     return NextResponse.json({ error: 'Failed to delete registration' }, { status: 500 });

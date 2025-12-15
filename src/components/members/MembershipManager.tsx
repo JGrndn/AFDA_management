@@ -14,7 +14,6 @@ export function MembershipManager({ member, onUpdate }: MembershipManagerProps) 
   const [selectedSeasonId, setSelectedSeasonId] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [validatingId, setValidatingId] = useState<number | null>(null);
 
   const { seasons } = useSeasons();
 
@@ -66,116 +65,52 @@ export function MembershipManager({ member, onUpdate }: MembershipManagerProps) 
     }
   };
 
-  const handleValidate = async (membershipId: number) => {
-    setValidatingId(membershipId);
-
-    try {
-      const response = await fetch(`/api/memberships/${membershipId}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          status: 'validated',
-        }),
-      });
-
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || 'Failed to validate membership');
-      }
-
-      onUpdate();
-    } catch (err: any) {
-      alert(`Error: ${err.message}`);
-    } finally {
-      setValidatingId(null);
-    }
-  };
-
-  const sortedMemberships = member.memberships
-    ? [...member.memberships]
-        .filter((m: any) => m.season.isActive) // Ne garder que la saison active
-        .sort((a: any, b: any) => b.season.startYear - a.season.startYear)
-    : [];
-
   return (
     <>
       <Card 
-        title="Membership"
+        title="Memberships"
         actions={
-          availableSeasons.filter((s: any) => s.isActive).length > 0 && (
+          availableSeasons.length > 0 && (
             <Button size="sm" onClick={handleOpenModal}>
               Add Membership
             </Button>
           )
         }
       >
-        {sortedMemberships.length > 0 ? (
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Season
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Amount
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Date
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Status
-                  </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {sortedMemberships.map((membership: any) => (
-                  <tr key={membership.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="font-medium text-gray-900">
-                        {membership.season.label}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="font-semibold text-gray-900">
-                        €{Number(membership.amount).toFixed(2)}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {new Date(membership.membershipDate).toLocaleDateString()}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <StatusBadge status={membership.status} />
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      {membership.status !== 'validated' && (
-                        <Button
-                          size="sm"
-                          onClick={() => handleValidate(membership.id)}
-                          disabled={validatingId === membership.id}
-                        >
-                          {validatingId === membership.id ? 'Validating...' : 'Validate'}
-                        </Button>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+        {member.memberships && member.memberships.length > 0 ? (
+          <div className="space-y-3">
+            {member.memberships
+              .sort((a: any, b: any) => b.season.startYear - a.season.startYear)
+              .map((membership: any) => (
+                <div key={membership.id} className="border rounded-lg p-4 flex justify-between items-center">
+                  <div>
+                    <h4 className="font-semibold">{membership.season.label}</h4>
+                    <div className="text-sm text-gray-500 mt-1">
+                      Membership Date: {new Date(membership.membershipDate).toLocaleDateString()}
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <div className="font-semibold text-lg">€{Number(membership.amount).toFixed(2)}</div>
+                    <StatusBadge status={membership.status} />
+                  </div>
+                </div>
+              ))}
           </div>
         ) : (
-          <div className="text-center py-8">
-            <p className="text-gray-500 mb-4">No memberships yet</p>
-            {availableSeasons.length > 0 && (
-              <Button onClick={handleOpenModal}>
-                Create First Membership
-              </Button>
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <div className="flex items-start">
+                  <svg className="w-5 h-5 text-blue-600 mr-3 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <div>
+                    <h4 className="font-semibold text-blue-900">No membership</h4>
+                    <p className="text-sm text-blue-800 mt-1">
+                      Click the button above to create a membership for this member this member.
+                    </p>
+                  </div>
+                </div>
+              </div>
             )}
-          </div>
-        )}
       </Card>
 
       <Modal
@@ -250,17 +185,20 @@ export function MembershipManager({ member, onUpdate }: MembershipManagerProps) 
               </div>
             </>
           ) : (
-            <div className="text-center py-4">
-              <p className="text-gray-600">All available seasons already have memberships for this member.</p>
-              <Button
-                variant="secondary"
-                onClick={() => setIsModalOpen(false)}
-                className="mt-4"
-              >
-                Close
-              </Button>
-            </div>
-          )}
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <div className="flex items-start">
+                  <svg className="w-5 h-5 text-blue-600 mr-3 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <div>
+                    <h4 className="font-semibold text-blue-900">No membership</h4>
+                    <p className="text-sm text-blue-800 mt-1">
+                      Click the button above to create a membership for this member this member.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
         </div>
       </Modal>
     </>

@@ -3,13 +3,13 @@ import { paymentService } from '@/lib/services/payments';
 
 export async function POST(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { cashingDate } = await request.json();
-
+    const { id } = await params;
     const payment = await paymentService.markAsCashed(
-      parseInt(params.id),
+      parseInt(id),
       new Date(cashingDate)
     );
 

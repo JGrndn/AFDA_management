@@ -16,7 +16,13 @@ export default function WorkshopsPage() {
     {
       key: 'description',
       label: 'Description',
-      render: (workshop: any) => workshop.description?.slice(0, 50) + '...' || '-',
+      render: (workshop: any) => {
+        if (workshop.description){
+          return workshop.description.length > 50 ? workshop.description?.slice(0, 50) + '...' : workshop.description;
+        } else {
+          return '';
+        }
+      },
     },
     {
       key: 'registrations',

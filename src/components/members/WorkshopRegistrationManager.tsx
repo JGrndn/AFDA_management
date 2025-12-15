@@ -53,7 +53,7 @@ export function WorkshopRegistrationManager({
       .filter((w: any) => selectedWorkshops.includes(w.id))
       .reduce((sum: number, w: any) => {
         const price = w.workshopPrices?.[0]?.amount || 0;
-        const discount = familyOrder > 1 ? 0.9 : 1;
+        const discount = familyOrder > 1 ? (1 - activeSeason.discountPercent / 100) : 1;
         return sum + Number(price) * discount;
       }, 0);
 
@@ -137,11 +137,10 @@ export function WorkshopRegistrationManager({
                     <div className="text-sm text-gray-600 mt-1">
                       Family Order: {activeRegistration.familyOrder}
                       {activeRegistration.familyOrder > 1 && (
-                        <span className="ml-2 text-green-600">(10% discount)</span>
+                        <span className="ml-2 text-green-600">({activeSeason.discountPercent}% discount)</span>
                       )}
                     </div>
                   </div>
-                  
                 </div>
                 
                 {activeRegistration.workshopRegistrations.length > 0 ? (
@@ -211,7 +210,7 @@ export function WorkshopRegistrationManager({
               className="w-full px-3 py-2 border border-gray-300 rounded-md"
             />
             <p className="text-xs text-gray-500 mt-1">
-              Set to 1 for first family member, 2+ for siblings (10% workshop discount)
+              Set to 1 for first family member, 2+ for siblings ({activeSeason.discountPercent}% workshop discount)
             </p>
           </div>
 
@@ -220,7 +219,7 @@ export function WorkshopRegistrationManager({
             <div className="space-y-2 max-h-96 overflow-y-auto">
               {workshops.map((workshop: any) => {
                 const price = workshop.workshopPrices?.[0]?.amount || 0;
-                const discountedPrice = familyOrder > 1 ? price * 0.9 : price;
+                const discountedPrice = familyOrder > 1 ? price * (1 - activeSeason.discountPercent/100) : price;
                 const isSelected = selectedWorkshops.includes(workshop.id);
 
                 return (
@@ -248,7 +247,7 @@ export function WorkshopRegistrationManager({
                       <div className="font-semibold">€{discountedPrice}</div>
                       {familyOrder > 1 && (
                         <div className="text-xs text-green-600">
-                          (10% discount)
+                          ({activeSeason.discountPercent}% discount)
                         </div>
                       )}
                     </div>

@@ -42,20 +42,12 @@ export default function RegistrationsPage() {
       label: 'Date',
       render: (reg: any) => new Date(reg.registrationDate).toLocaleDateString(),
     },
-    {
-      key: 'status',
-      label: 'Status',
-      render: (reg: any) => <StatusBadge status={reg.status} />,
-    },
   ];
 
   return (
     <div className="container mx-auto p-6">
       <div className="mb-6 flex justify-between items-center">
         <h1 className="text-3xl font-bold">Registrations</h1>
-        <Button onClick={() => router.push('/registrations/new')}>
-          New Registration
-        </Button>
       </div>
 
       {activeSeason && (

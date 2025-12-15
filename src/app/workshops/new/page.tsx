@@ -1,17 +1,17 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { MemberForm } from '@/components/members/MemberForm';
-import { useMemberMutations } from '@/hooks/useMutations';
+import { WorkshopForm } from '@/components/workshops/WorkshopForm';
+import { useWorkshopMutations } from '@/hooks/useMutations';
 
-export default function NewMemberPage() {
+export default function NewWorkshopPage() {
   const router = useRouter();
-  const { createMember, isLoading, error } = useMemberMutations();
+  const { createWorkshop, isLoading, error } = useWorkshopMutations();
 
   const handleSubmit = async (data: any) => {
-    const result:any = await createMember(data);
+    const result = await createWorkshop(data);
     if (result) {
-      router.push(`/members/${result.id}`);
+      router.push('/workshops');
     }
   };
 
@@ -22,9 +22,9 @@ export default function NewMemberPage() {
           {error}
         </div>
       )}
-      <MemberForm
+      <WorkshopForm
         onSubmit={handleSubmit}
-        onCancel={() => router.push('/members')}
+        onCancel={() => router.push('/workshops')}
         isLoading={isLoading}
       />
     </div>

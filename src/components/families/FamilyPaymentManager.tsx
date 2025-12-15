@@ -257,6 +257,7 @@ export function FamilyPaymentManager({ family, season, onUpdate }: FamilyPayment
                       <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Amount</th>
                       <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Date</th>
                       <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Cashed</th>
+                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Notes</th>
                       <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Status</th>
                       <th className="px-4 py-2 text-right text-xs font-medium text-gray-500">Actions</th>
                     </tr>
@@ -271,6 +272,7 @@ export function FamilyPaymentManager({ family, season, onUpdate }: FamilyPayment
                         <td className="px-4 py-2 text-sm">
                           {payment.cashingDate ? new Date(payment.cashingDate).toLocaleDateString() : '-'}
                         </td>
+                        <td className="px-4 py-2 text-sm">{payment.Notes}</td>
                         <td className="px-4 py-2">
                           <StatusBadge status={payment.status} />
                         </td>

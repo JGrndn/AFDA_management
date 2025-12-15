@@ -16,6 +16,7 @@ export function SeasonForm({ initialData, onSubmit, onCancel, isLoading }: Seaso
     endYear: new Date().getFullYear() + 1,
     label: '',
     membershipAmount: 0,
+    discountPercent:0,
     isActive: false,
     ...initialData,
   });
@@ -71,6 +72,16 @@ export function SeasonForm({ initialData, onSubmit, onCancel, isLoading }: Seaso
           value={formData.membershipAmount}
           onChange={(v) => updateField('membershipAmount', v)}
           required
+        />
+
+        <FormField
+          label="Réduction (%)"
+          name="discountPercent"
+          type="number"
+          value={formData.discountPercent}
+          onChange={(v) => updateField('discountPercent', v)}
+          required
+          helpText="Réduction à appliquer si plusieurs adhésion par famille"
         />
 
         <FormField

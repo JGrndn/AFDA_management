@@ -38,6 +38,12 @@ export const seasonService = {
   },
 
   async update(id: number, data: Prisma.SeasonUpdateInput) {
+    if (data.isActive === true){
+      await prisma.season.updateMany({
+        where: { isActive: true, NOT: { id }},
+        data: { isActive: false}
+      });
+    }
     const cleanData = extractScalarFields(data) as Prisma.SeasonUpdateInput;
     return prisma.season.update({
       where: { id },

@@ -130,13 +130,19 @@ export default function SeasonDetailPage({ params }: { params: Promise<{ id: str
               <div>
                 <dt className="text-sm font-medium text-gray-500">Membership Amount</dt>
                 <dd className="mt-1 text-sm text-gray-900 font-semibold">
-                  €{Number(season.membershipAmount).toFixed(2)}
+                  {Number(season.membershipAmount).toFixed(2)} €
                 </dd>
               </div>
               <div>
                 <dt className="text-sm font-medium text-gray-500">Status</dt>
                 <dd className="mt-1">
                   <StatusBadge status={season.isActive ? 'active' : 'inactive'} />
+                </dd>
+              </div>
+              <div>
+                <dt className="text-sm font-medium text-gray-500">Discount</dt>
+                <dd className="mt-1">
+                  {season.discountPercent} %
                 </dd>
               </div>
             </dl>

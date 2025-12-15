@@ -220,3 +220,41 @@ export function useFamilyMutations() {
     error: api.error,
   };
 }
+
+export function useWorkshopMutations() {
+  const api = useApi();
+
+  const createWorkshop = async (data: any) => {
+    return api.execute(
+      fetch('/api/workshops', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      })
+    );
+  };
+
+  const updateWorkshop = async (id: number, data: any) => {
+    return api.execute(
+      fetch(`/api/workshops/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      })
+    );
+  };
+
+  const deleteWorkshop = async (id: number) => {
+    return api.execute(
+      fetch(`/api/workshops/${id}`, { method: 'DELETE' })
+    );
+  };
+
+  return {
+    createWorkshop,
+    updateWorkshop,
+    deleteWorkshop,
+    isLoading: api.isLoading,
+    error: api.error,
+  };
+}

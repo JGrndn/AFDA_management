@@ -38,7 +38,7 @@ export const registrationService = {
 
     if (!season) throw new Error('Season not found');
 
-    const discountPercent = familyOrder > 1 ? 10 : 0;
+    const discountPercent = familyOrder > 1 ? season.discountPercent : 0;
 
     const registration = await prisma.registration.create({
       data: {
@@ -122,8 +122,7 @@ export const registrationService = {
     });
 
     if (!registration) throw new Error('Registration not found');
-
-    const discountPercent = (familyOrder || registration.familyOrder) > 1 ? 10 : 0;
+    const discountPercent = (familyOrder || registration.familyOrder) > 1 ? registration.season.discountPercent : 0;
 
     // Supprimer les anciennes inscriptions aux ateliers
     await prisma.workshopRegistration.deleteMany({

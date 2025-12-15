@@ -1,12 +1,36 @@
 'use client';
 
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSeasons } from '@/hooks/useSeasons';
+import { useSeasonMutations } from '@/hooks/useMutations';
 import { DataTable, Button, StatusBadge } from '@/components/ui';
 
 export default function SeasonsPage() {
   const router = useRouter();
-  const { seasons, isLoading } = useSeasons();
+  const { seasons, isLoading, mutate } = useSeasons();
+  const { updateSeason } = useSeasonMutations();
+  const [activatingId, setActivatingId] = useState<number | null>(null);
+
+  const handleActivate = async (seasonId: number, seasonLabel: string) => {
+    setActivatingId(seasonId);
+    try {
+      // L'API gère automatiquement la désactivation de l'ancienne saison active
+      const response = await fetch(`/api/seasons/${seasonId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ isActive: true }),
+      });
+
+      if (response.ok) {
+        await mutate(); // Rafraîchir la liste
+      }
+    } catch (error) {
+      console.error('Error activating season:', error);
+    } finally {
+      setActivatingId(null);
+    }
+  };
 
   const columns = [
     {
@@ -35,6 +59,24 @@ export default function SeasonsPage() {
         <StatusBadge status={season.isActive ? 'active' : 'inactive'} />
       ),
     },
+    {
+      key: 'actions',
+      label: 'Actions',
+      render: (season: any) => (
+        !season.isActive && (
+          <Button
+            size="sm"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleActivate(season.id, season.label);
+            }}
+            disabled={activatingId === season.id}
+          >
+            {activatingId === season.id ? 'Activating...' : 'Activate'}
+          </Button>
+        )
+      ),
+    },
   ];
 
   return (
@@ -49,7 +91,7 @@ export default function SeasonsPage() {
       <DataTable
         data={seasons}
         columns={columns}
-        onRowClick={(season: any) => router.push(`/seasons/${season.id}`)}
+        onRowClick={(season) => router.push(`/seasons/${season.id}`)}
         isLoading={isLoading}
         emptyMessage="No seasons found"
       />

@@ -130,12 +130,6 @@ export default function DashboardPage() {
             <ul className="divide-y divide-gray-200">
               {recentPayments.map((payment: any) => (
                 <li key={payment.id} className="py-3 flex justify-between items-center">
-                  <div>
-                    <div className="font-medium">{payment.reference || 'No reference'}</div>
-                    <div className="text-sm text-gray-500">
-                      {payment.paymentRegistrations.length} registration(s)
-                    </div>
-                  </div>
                   <div className="text-right">
                     <div className="font-semibold">€{Number(payment.totalAmount).toFixed(2)}</div>
                     <div className="text-xs text-gray-500">

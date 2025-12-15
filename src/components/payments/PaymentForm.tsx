@@ -7,6 +7,7 @@ import { useActiveSeason } from '@/hooks/useSeasons';
 import { PAYMENT_TYPES } from '@/lib/types';
 
 interface PaymentFormProps {
+  initialData:any;
   onSubmit: (data: any) => Promise<void>;
   onCancel?: () => void;
   isLoading?: boolean;
