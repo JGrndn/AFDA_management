@@ -279,7 +279,7 @@ export function FamilyPaymentManager({ family, season, onUpdate }: FamilyPayment
                           <StatusBadge status={payment.status} />
                         </td>
                         <td className="px-4 py-2">{payment.notes && (
-                              <Tooltip note={payment.notes} />
+                              <Tooltip content={payment.notes} />
                             )}</td>
                         <td className="px-4 py-2 text-right"
                             onClick={(e) => e.stopPropagation()}

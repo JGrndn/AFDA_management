@@ -102,7 +102,7 @@ export default function PaymentsPage() {
     {
       key:'notes',
       label:'Notes',
-      render: (payment: any) => payment.notes ? <Tooltip note={payment.notes} /> : '',
+      render: (payment: any) => payment.notes ? <Tooltip content={payment.notes}/> : '',
     },
     {
       key: 'actions',
