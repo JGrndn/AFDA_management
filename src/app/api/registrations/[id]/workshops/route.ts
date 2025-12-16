@@ -7,11 +7,12 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { workshopIds, familyOrder } = await request.json();
+    const { workshopQuantities, familyOrder } = await request.json();
     const { id } = await params;
+    
     const registration = await registrationService.updateWorkshops(
       parseInt(id),
-      workshopIds,
+      workshopQuantities,
       familyOrder
     );
     

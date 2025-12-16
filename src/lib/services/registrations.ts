@@ -1,6 +1,11 @@
 import { prisma } from '@/lib/prisma';
 import { Prisma } from '@/generated/prisma/client';
 
+interface WorkshopQuantity {
+  workshopId: number;
+  quantity: number;
+}
+
 export const registrationService = {
   async getAll(seasonId?: number) {
     return prisma.registration.findMany({
@@ -28,7 +33,7 @@ export const registrationService = {
   async create(
     memberId: number,
     seasonId: number,
-    workshopIds: number[],
+    workshopQuantities: WorkshopQuantity[], // Modifié pour accepter quantity
     familyOrder: number = 1
   ) {
     const season = await prisma.season.findUnique({
@@ -38,7 +43,27 @@ export const registrationService = {
 
     if (!season) throw new Error('Season not found');
 
-    // Vérifier si le membre a une adhésion (pending ou validated)
+    // Récupérer les workshops pour vérifier allowMultiple et maxPerMember
+    const workshopIds = workshopQuantities.map(wq => wq.workshopId);
+    const workshops = await prisma.workshop.findMany({
+      where: { id: { in: workshopIds } }
+    });
+
+    // Valider les quantités
+    for (const wq of workshopQuantities) {
+      const workshop = workshops.find(w => w.id === wq.workshopId);
+      if (!workshop) throw new Error(`Workshop ${wq.workshopId} not found`);
+      
+      if (wq.quantity > 1 && !workshop.allowMultiple) {
+        throw new Error(`Workshop "${workshop.name}" does not allow multiple registrations`);
+      }
+      
+      if (workshop.maxPerMember && wq.quantity > workshop.maxPerMember) {
+        throw new Error(`Workshop "${workshop.name}" allows maximum ${workshop.maxPerMember} registrations per member`);
+      }
+    }
+
+    // Vérifier si le membre a une adhésion
     const membership = await prisma.membership.findFirst({
       where: { 
         memberId, 
@@ -47,7 +72,6 @@ export const registrationService = {
       }
     });
 
-    // Le discount s'applique si familyOrder > 1 ET adhésion existe
     const eligibleForDiscount = familyOrder > 1 && !!membership;
     const discountPercent = eligibleForDiscount ? season.discountPercent : 0;
 
@@ -57,18 +81,19 @@ export const registrationService = {
         seasonId,
         familyOrder,
         workshopRegistrations: {
-          create: workshopIds.map((workshopId) => {
+          create: workshopQuantities.map((wq) => {
             const price = season.workshopPrices.find(
-              (p) => p.workshopId === workshopId
+              (p) => p.workshopId === wq.workshopId
             );
-            if (!price) throw new Error(`No price found for workshop ${workshopId}`);
+            if (!price) throw new Error(`No price found for workshop ${wq.workshopId}`);
 
             const basePrice = Number(price.amount);
             const appliedPrice = basePrice * (1 - discountPercent / 100);
 
             return {
-              workshopId,
-              appliedPrice,
+              workshopId: wq.workshopId,
+              quantity: wq.quantity,
+              appliedPrice, // Prix unitaire
               discountPercent,
             };
           }),
@@ -109,8 +134,9 @@ export const registrationService = {
 
     if (!registration) return 0;
 
+    // Calculer le total en tenant compte de la quantité
     const workshopTotal = registration.workshopRegistrations.reduce(
-      (sum, wr) => sum + Number(wr.appliedPrice),
+      (sum, wr) => sum + (Number(wr.appliedPrice) * wr.quantity),
       0
     );
 
@@ -121,7 +147,7 @@ export const registrationService = {
 
   async updateWorkshops(
     registrationId: number,
-    workshopIds: number[],
+    workshopQuantities: WorkshopQuantity[], // Modifié
     familyOrder?: number
   ) {
     const registration = await prisma.registration.findUnique({
@@ -134,6 +160,26 @@ export const registrationService = {
     });
 
     if (!registration) throw new Error('Registration not found');
+
+    // Récupérer les workshops pour validation
+    const workshopIds = workshopQuantities.map(wq => wq.workshopId);
+    const workshops = await prisma.workshop.findMany({
+      where: { id: { in: workshopIds } }
+    });
+
+    // Valider les quantités
+    for (const wq of workshopQuantities) {
+      const workshop = workshops.find(w => w.id === wq.workshopId);
+      if (!workshop) throw new Error(`Workshop ${wq.workshopId} not found`);
+      
+      if (wq.quantity > 1 && !workshop.allowMultiple) {
+        throw new Error(`Workshop "${workshop.name}" does not allow multiple registrations`);
+      }
+      
+      if (workshop.maxPerMember && wq.quantity > workshop.maxPerMember) {
+        throw new Error(`Workshop "${workshop.name}" allows maximum ${workshop.maxPerMember} registrations per member`);
+      }
+    }
 
     // Vérifier si le membre a une adhésion
     const membership = await prisma.membership.findFirst({
@@ -148,18 +194,18 @@ export const registrationService = {
     const eligibleForDiscount = currentFamilyOrder > 1 && !!membership;
     const discountPercent = eligibleForDiscount ? registration.season.discountPercent : 0;
 
-    // Supprimer les anciennes inscriptions aux ateliers
+    // Supprimer les anciennes inscriptions
     await prisma.workshopRegistration.deleteMany({
       where: { registrationId },
     });
 
-    // Créer les nouvelles
+    // Créer les nouvelles avec quantité
     await Promise.all(
-      workshopIds.map(async (workshopId) => {
+      workshopQuantities.map(async (wq) => {
         const price = registration.season.workshopPrices.find(
-          (p) => p.workshopId === workshopId
+          (p) => p.workshopId === wq.workshopId
         );
-        if (!price) throw new Error(`No price found for workshop ${workshopId}`);
+        if (!price) throw new Error(`No price found for workshop ${wq.workshopId}`);
 
         const basePrice = Number(price.amount);
         const appliedPrice = basePrice * (1 - discountPercent / 100);
@@ -167,8 +213,9 @@ export const registrationService = {
         return prisma.workshopRegistration.create({
           data: {
             registrationId,
-            workshopId,
-            appliedPrice,
+            workshopId: wq.workshopId,
+            quantity: wq.quantity,
+            appliedPrice, // Prix unitaire
             discountPercent,
           },
           include: { workshop: true },
@@ -190,10 +237,6 @@ export const registrationService = {
     return updatedRegistration;
   },
 
-  /**
-   * Recalcule les prix des workshops pour un membre donné
-   * Appelé quand une adhésion est créée/modifiée
-   */
   async recalculateWorkshopPricesForMember(memberId: number, seasonId: number) {
     const registration = await prisma.registration.findUnique({
       where: { 
@@ -207,7 +250,6 @@ export const registrationService = {
 
     if (!registration) return;
 
-    // Vérifier si adhésion existe
     const membership = await prisma.membership.findFirst({
       where: { 
         memberId, 
@@ -219,7 +261,7 @@ export const registrationService = {
     const eligibleForDiscount = registration.familyOrder > 1 && !!membership;
     const discountPercent = eligibleForDiscount ? registration.season.discountPercent : 0;
 
-    // Mettre à jour chaque workshop registration
+    // Mettre à jour chaque workshop registration (prix unitaire)
     for (const wr of registration.workshopRegistrations) {
       const price = registration.season.workshopPrices.find(
         p => p.workshopId === wr.workshopId
@@ -232,7 +274,7 @@ export const registrationService = {
         await prisma.workshopRegistration.update({
           where: { id: wr.id },
           data: {
-            appliedPrice: newAppliedPrice,
+            appliedPrice: newAppliedPrice, // Prix unitaire
             discountPercent: discountPercent
           }
         });

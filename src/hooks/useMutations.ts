@@ -76,13 +76,18 @@ export function useMemberMutations() {
   };
 }
 
+interface WorkshopQuantity {
+  workshopId: number;
+  quantity: number;
+}
+
 export function useRegistrationMutations() {
   const api = useApi();
 
   const createRegistration = async (data: {
     memberId: number;
     seasonId: number;
-    workshopIds: number[];
+    workshopQuantities: WorkshopQuantity[];
     familyOrder?: number;
   }) => {
     return api.execute(
@@ -112,14 +117,14 @@ export function useRegistrationMutations() {
 
   const updateWorkshops = async (
     registrationId: number,
-    workshopIds: number[],
+    workshopQuantities: WorkshopQuantity[],
     familyOrder: number
   ) => {
     return api.execute(
       fetch(`/api/registrations/${registrationId}/workshops`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ workshopIds, familyOrder }),
+        body: JSON.stringify({ workshopQuantities, familyOrder }),
       })
     );
   };

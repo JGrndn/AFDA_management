@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Card, Button, Modal, StatusBadge } from '@/components/ui';
+import { Card, Button, Modal } from '@/components/ui';
 import { useActiveSeason } from '@/hooks/useSeasons';
 import { useWorkshops } from '@/hooks/useWorkshops';
 import { useRegistrationMutations } from '@/hooks/useMutations';
@@ -16,75 +16,84 @@ export function WorkshopRegistrationManager({
   onUpdate 
 }: WorkshopRegistrationManagerProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedWorkshops, setSelectedWorkshops] = useState<number[]>([]);
+  const [workshopQuantities, setWorkshopQuantities] = useState<Record<number, number>>({});
   const [familyOrder, setFamilyOrder] = useState(1);
   
   const { season: activeSeason } = useActiveSeason();
   const { workshops } = useWorkshops({ seasonId: activeSeason?.id });
   const { createRegistration, updateWorkshops, isLoading, error } = useRegistrationMutations();
 
-  // Trouver l'inscription pour la saison active
   const activeRegistration = member.registrations?.find(
     (reg: any) => reg.seasonId === activeSeason?.id
   );
 
-  // Vérifier si le membre a une adhésion (pending ou validated)
   const hasMembership = member.memberships?.some(
     (m: any) => m.seasonId === activeSeason?.id && 
                 ['pending', 'validated'].includes(m.status)
   );
 
-  // Ateliers déjà inscrits
-  const enrolledWorkshopIds = activeRegistration?.workshopRegistrations.map(
-    (wr: any) => wr.workshopId
-  ) || [];
-
   const handleOpenModal = () => {
-    setSelectedWorkshops(enrolledWorkshopIds);
+    // Initialiser les quantités depuis l'inscription existante
+    const quantities: Record<number, number> = {};
+    activeRegistration?.workshopRegistrations.forEach((wr: any) => {
+      quantities[wr.workshopId] = wr.quantity;
+    });
+    setWorkshopQuantities(quantities);
     setFamilyOrder(activeRegistration?.familyOrder || 1);
     setIsModalOpen(true);
   };
 
-  const toggleWorkshop = (workshopId: number) => {
-    setSelectedWorkshops((prev) =>
-      prev.includes(workshopId)
-        ? prev.filter((id) => id !== workshopId)
-        : [...prev, workshopId]
-    );
+  const updateQuantity = (workshopId: number, quantity: number) => {
+    setWorkshopQuantities((prev) => {
+      const updated = { ...prev };
+      if (quantity <= 0) {
+        delete updated[workshopId];
+      } else {
+        updated[workshopId] = quantity;
+      }
+      return updated;
+    });
   };
 
   const calculateTotal = () => {
     if (!activeSeason || !workshops) return 0;
     
-    // Le discount s'applique si familyOrder > 1 ET adhésion existe
     const eligibleForDiscount = familyOrder > 1 && hasMembership;
     
-    const workshopTotal = workshops
-      .filter((w: any) => selectedWorkshops.includes(w.id))
-      .reduce((sum: number, w: any) => {
-        const price = w.workshopPrices?.[0]?.amount || 0;
-        const discount = eligibleForDiscount ? (1-activeSeason.discountPercent/100) : 1;
-        return sum + Number(price) * discount;
-      }, 0);
+    const workshopTotal = Object.entries(workshopQuantities).reduce((sum, [workshopIdStr, quantity]) => {
+      const workshopId = parseInt(workshopIdStr);
+      const workshop = workshops.find((w: any) => w.id === workshopId);
+      if (!workshop) return sum;
+      
+      const price = workshop.workshopPrices?.[0]?.amount || 0;
+      const discount = eligibleForDiscount ? (1-activeSeason.discountPercent/100) : 1;
+      return sum + (Number(price) * discount * quantity);
+    }, 0);
 
     return workshopTotal;
   };
 
   const handleSubmit = async () => {
     if (!activeSeason) return;
+    
+    // Convertir en format attendu par l'API
+    const workshopQuantitiesArray = Object.entries(workshopQuantities).map(([workshopId, quantity]) => ({
+      workshopId: parseInt(workshopId),
+      quantity
+    }));
+
     let result;
     if (activeRegistration){
       result = await updateWorkshops(
         activeRegistration.id,
-        selectedWorkshops,
+        workshopQuantitiesArray,
         familyOrder
       );
-    }
-    else {
+    } else {
       result = await createRegistration({
         memberId: member.id,
         seasonId: activeSeason.id,
-        workshopIds: selectedWorkshops,
+        workshopQuantities: workshopQuantitiesArray,
         familyOrder,
       });
     }
@@ -146,7 +155,7 @@ export function WorkshopRegistrationManager({
                     <div className="text-sm text-gray-600 mt-1">
                       Family Order: {activeRegistration.familyOrder}
                       {activeRegistration.familyOrder > 1 && hasMembership && (
-                        <span className="ml-2 text-green-600">({activeSeason.discountPercent}% discount applied)</span>
+                        <span className="ml-2 text-green-600">({activeRegistration.season.discountPercent}% discount applied)</span>
                       )}
                       {activeRegistration.familyOrder > 1 && !hasMembership && (
                         <span className="ml-2 text-yellow-600">(no discount - no membership)</span>
@@ -161,9 +170,21 @@ export function WorkshopRegistrationManager({
                     <ul className="space-y-2">
                       {activeRegistration.workshopRegistrations.map((wr: any) => (
                         <li key={wr.id} className="flex justify-between items-center bg-white p-2 rounded">
-                          <span className="text-sm">{wr.workshop.name}</span>
+                          <div className="flex-1">
+                            <span className="text-sm font-medium">{wr.workshop.name}</span>
+                            {wr.quantity > 1 && (
+                              <span className="ml-2 text-xs text-gray-600">× {wr.quantity}</span>
+                            )}
+                          </div>
                           <div className="text-sm text-right">
-                            <span className="font-semibold">€{Number(wr.appliedPrice).toFixed(2)}</span>
+                            <span className="font-semibold">
+                              €{(Number(wr.appliedPrice) * wr.quantity).toFixed(2)}
+                            </span>
+                            {wr.quantity > 1 && (
+                              <div className="text-xs text-gray-500">
+                                €{Number(wr.appliedPrice).toFixed(2)} each
+                              </div>
+                            )}
                             {wr.discountPercent > 0 && (
                               <span className="ml-2 text-xs text-green-600">
                                 (-{wr.discountPercent}%)
@@ -218,7 +239,6 @@ export function WorkshopRegistrationManager({
             )}
           </div>
 
-          {/* Message d'alerte si familyOrder > 1 mais pas d'adhésion */}
           {familyOrder > 1 && !hasMembership && (
             <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
               <div className="flex items-start">
@@ -226,13 +246,12 @@ export function WorkshopRegistrationManager({
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                 </svg>
                 <div className="text-sm text-yellow-800">
-                  <strong>No membership yet:</strong> Family discount ({activeSeason.discountPercent}%) will apply once you create a membership for this season.
+                  <strong>No membership yet:</strong> Family discount ({activeRegistration.season.discountPercent}%) will apply once you create a membership for this season.
                 </div>
               </div>
             </div>
           )}
 
-          {/* Message de confirmation si discount appliqué */}
           {familyOrder > 1 && hasMembership && (
             <div className="bg-green-50 border border-green-200 rounded-lg p-3">
               <div className="flex items-center">
@@ -240,7 +259,7 @@ export function WorkshopRegistrationManager({
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
                 <span className="text-sm text-green-800 font-medium">
-                  Family discount ({activeSeason.discountPercent}%) applied - Member has active membership
+                  Family discount ({activeRegistration.season.discountPercent}%) applied - Member has active membership
                 </span>
               </div>
             </div>
@@ -258,54 +277,106 @@ export function WorkshopRegistrationManager({
               className="w-full px-3 py-2 border border-gray-300 rounded-md"
             />
             <p className="text-xs text-gray-500 mt-1">
-              Set to 1 for first family member, 2+ for siblings ({activeSeason.discountPercent}% workshop discount if membership exists)
+              Set to 1 for first family member, 2+ for siblings ({activeRegistration.season.discountPercent}% workshop discount if membership exists)
             </p>
           </div>
 
           <div>
             <h3 className="text-lg font-semibold mb-3">Select Workshops</h3>
-            <div className="space-y-2 max-h-96 overflow-y-auto">
+            <div className="space-y-3 max-h-96 overflow-y-auto">
               {workshops.map((workshop: any) => {
                 const price = workshop.workshopPrices?.[0]?.amount || 0;
                 const eligibleForDiscount = familyOrder > 1 && hasMembership;
-                const discountedPrice = eligibleForDiscount ? price * (1-activeSeason.discountPercent/100) : price;
-                const isSelected = selectedWorkshops.includes(workshop.id);
+                const unitPrice = eligibleForDiscount ? price * (1 - activeRegistration.season.discountPercent/100) : price;
+                const quantity = workshopQuantities[workshop.id] || 0;
+                const totalPrice = unitPrice * quantity;
 
                 return (
-                  <label
+                  <div
                     key={workshop.id}
-                    className={`flex items-center justify-between p-3 border rounded-lg cursor-pointer transition ${
-                      isSelected ? 'bg-blue-50 border-blue-300' : 'bg-white border-gray-200 hover:bg-gray-50'
+                    className={`border rounded-lg p-4 ${
+                      quantity > 0 ? 'bg-blue-50 border-blue-300' : 'bg-white border-gray-200'
                     }`}
                   >
-                    <div className="flex items-center flex-1">
-                      <input
-                        type="checkbox"
-                        checked={isSelected}
-                        onChange={() => toggleWorkshop(workshop.id)}
-                        className="h-4 w-4 text-blue-600 mr-3"
-                      />
-                      <div>
+                    <div className="flex items-start justify-between mb-2">
+                      <div className="flex-1">
                         <div className="font-medium">{workshop.name}</div>
                         {workshop.description && (
                           <div className="text-sm text-gray-500">{workshop.description}</div>
                         )}
+                        {workshop.allowMultiple && (
+                          <div className="mt-1 flex items-center text-xs text-blue-600">
+                            <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v3.586L7.707 9.293a1 1 0 00-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 10.586V7z" clipRule="evenodd" />
+                            </svg>
+                            Multiple registrations allowed
+                            {workshop.maxPerMember && ` (max ${workshop.maxPerMember})`}
+                          </div>
+                        )}
+                      </div>
+                      <div className="text-right ml-4">
+                        <div className="font-semibold">€{Number(price).toFixed(2)}</div>
+                        {eligibleForDiscount && (
+                          <div className="text-xs text-green-600">
+                            €{unitPrice.toFixed(2)} with discount
+                          </div>
+                        )}
                       </div>
                     </div>
-                    <div className="text-right ml-4">
-                      <div className="font-semibold">€{discountedPrice}</div>
-                      {eligibleForDiscount && (
-                        <div className="text-xs text-green-600">
-                          ({activeSeason.discountPercent}% discount)
+
+                    <div className="flex items-center justify-between mt-3 pt-3 border-t">
+                      {workshop.allowMultiple ? (
+                        <div className="flex items-center gap-3">
+                          <button
+                            type="button"
+                            onClick={() => updateQuantity(workshop.id, Math.max(0, quantity - 1))}
+                            className="w-8 h-8 flex items-center justify-center border border-gray-300 rounded-md hover:bg-gray-100"
+                            disabled={quantity <= 0}
+                          >
+                            −
+                          </button>
+                          <span className="font-semibold w-12 text-center">
+                            {quantity}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (!workshop.maxPerMember || quantity < workshop.maxPerMember) {
+                                updateQuantity(workshop.id, quantity + 1);
+                              }
+                            }}
+                            className="w-8 h-8 flex items-center justify-center border border-gray-300 rounded-md hover:bg-gray-100"
+                            disabled={workshop.maxPerMember && quantity >= workshop.maxPerMember}
+                          >
+                            +
+                          </button>
                         </div>
+                      ) : (
+                        <label className="flex items-center cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={quantity > 0}
+                            onChange={(e) => updateQuantity(workshop.id, e.target.checked ? 1 : 0)}
+                            className="h-4 w-4 text-blue-600 mr-2"
+                          />
+                          <span className="text-sm">Select</span>
+                        </label>
                       )}
-                      {!eligibleForDiscount && familyOrder > 1 && (
-                        <div className="text-xs text-gray-500">
-                          (€{price.toFixed(2)} - no membership)
+                      
+                      {quantity > 0 && (
+                        <div className="text-right">
+                          <div className="font-bold text-blue-600">
+                            €{totalPrice.toFixed(2)}
+                          </div>
+                          {quantity > 1 && (
+                            <div className="text-xs text-gray-600">
+                              €{unitPrice.toFixed(2)} × {quantity}
+                            </div>
+                          )}
                         </div>
                       )}
                     </div>
-                  </label>
+                  </div>
                 );
               })}
             </div>
@@ -318,15 +389,6 @@ export function WorkshopRegistrationManager({
                 €{calculateTotal().toFixed(2)}
               </span>
             </div>
-            {familyOrder > 1 && !hasMembership && selectedWorkshops.length > 0 && (
-              <div className="mt-2 text-sm text-yellow-700">
-                ⚠ Potential savings with membership: €
-                {(workshops
-                  .filter((w: any) => selectedWorkshops.includes(w.id))
-                  .reduce((sum: number, w: any) => sum + Number(w.workshopPrices?.[0]?.amount || 0) * 0.1, 0)
-                ).toFixed(2)}
-              </div>
-            )}
           </div>
 
           <div className="flex gap-3 pt-4 border-t">
@@ -340,7 +402,7 @@ export function WorkshopRegistrationManager({
             </Button>
             <Button
               onClick={handleSubmit}
-              disabled={isLoading || selectedWorkshops.length === 0}
+              disabled={isLoading || Object.keys(workshopQuantities).length === 0}
               className="flex-1"
             >
               {isLoading ? 'Saving...' : activeRegistration ? 'Update Registration' : 'Create Registration'}

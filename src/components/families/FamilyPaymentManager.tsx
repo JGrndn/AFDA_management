@@ -2,7 +2,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Card, Button, Modal, StatusBadge } from '@/components/ui';
+import { Card, Button, Modal, StatusBadge, Tooltip } from '@/components/ui';
+import { useRouter } from 'next/navigation';
 
 const PAYMENT_TYPES = ['cash', 'check', 'transfer', 'card'] as const;
 
@@ -30,6 +31,7 @@ interface FamilyPaymentManagerProps {
 }
 
 export function FamilyPaymentManager({ family, season, onUpdate }: FamilyPaymentManagerProps) {
+  const router = useRouter();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isCashingModalOpen, setIsCashingModalOpen] = useState(false);
   const [selectedPaymentId, setSelectedPaymentId] = useState<number | null>(null);
@@ -257,14 +259,15 @@ export function FamilyPaymentManager({ family, season, onUpdate }: FamilyPayment
                       <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Amount</th>
                       <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Date</th>
                       <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Cashed</th>
-                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Notes</th>
                       <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Status</th>
+                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Notes</th>
                       <th className="px-4 py-2 text-right text-xs font-medium text-gray-500">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-200">
                     {payments.map((payment) => (
-                      <tr key={payment.id} className="hover:bg-gray-50">
+                      <tr key={payment.id} className="hover:bg-gray-50 cursor-pointer"
+                        onClick={() => router.push(`/payments/${payment.id}`)}>
                         <td className="px-4 py-2 text-sm">{payment.reference || '-'}</td>
                         <td className="px-4 py-2 text-sm capitalize">{payment.paymentType}</td>
                         <td className="px-4 py-2 text-sm font-semibold">€{Number(payment.amount).toFixed(2)}</td>
@@ -272,20 +275,26 @@ export function FamilyPaymentManager({ family, season, onUpdate }: FamilyPayment
                         <td className="px-4 py-2 text-sm">
                           {payment.cashingDate ? new Date(payment.cashingDate).toLocaleDateString() : '-'}
                         </td>
-                        <td className="px-4 py-2 text-sm">{payment.notes}</td>
                         <td className="px-4 py-2">
                           <StatusBadge status={payment.status} />
                         </td>
-                        <td className="px-4 py-2 text-right">
-                          {payment.status === 'pending' && (
-                            <Button
-                              size="sm"
-                              onClick={() => handleValidatePayment(payment.id)}
-                              disabled={validatingId === payment.id}
-                            >
-                              {validatingId === payment.id ? 'Validating...' : 'Validate'}
-                            </Button>
-                          )}
+                        <td className="px-4 py-2">{payment.notes && (
+                              <Tooltip note={payment.notes} />
+                            )}</td>
+                        <td className="px-4 py-2 text-right"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                          <div className="flex items-center justifty-end gap-2">
+                            {payment.status === 'pending' && (
+                              <Button
+                                size="sm"
+                                onClick={() => handleValidatePayment(payment.id)}
+                                disabled={validatingId === payment.id}
+                              >
+                                {validatingId === payment.id ? 'Validating...' : 'Validate'}
+                              </Button>
+                            )}
+                            </div>
                         </td>
                       </tr>
                     ))}

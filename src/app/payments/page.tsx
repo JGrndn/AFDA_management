@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { usePayments } from '@/hooks/usePayments';
-import { DataTable, Button, StatusBadge, Card, Modal } from '@/components/ui';
+import { DataTable, Button, StatusBadge, Card, Modal, Tooltip } from '@/components/ui';
 
 export default function PaymentsPage() {
   const router = useRouter();
@@ -98,6 +98,11 @@ export default function PaymentsPage() {
       key: 'status',
       label: 'Status',
       render: (payment: any) => <StatusBadge status={payment.status} />,
+    },
+    {
+      key:'notes',
+      label:'Notes',
+      render: (payment: any) => payment.notes ? <Tooltip note={payment.notes} /> : '',
     },
     {
       key: 'actions',

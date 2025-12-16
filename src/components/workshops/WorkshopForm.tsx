@@ -15,6 +15,8 @@ export function WorkshopForm({ initialData, onSubmit, onCancel, isLoading }: Wor
     name: '',
     description: '',
     isActive: true,
+    allowMultiple: false,
+    maxPerMember: null,
     ...initialData,
   });
 
@@ -24,7 +26,10 @@ export function WorkshopForm({ initialData, onSubmit, onCancel, isLoading }: Wor
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await onSubmit(formData);
+    await onSubmit({
+      ...formData,
+      maxPerMember: formData.maxPerMember || null,
+    });
   };
 
   return (
@@ -58,6 +63,30 @@ export function WorkshopForm({ initialData, onSubmit, onCancel, isLoading }: Wor
         onChange={(v) => updateField('isActive', v)}
         helpText="Inactive workshops won't appear in registration forms"
       />
+
+      <div className="border-t pt-4 mt-4">
+        <h3 className="text-lg font-semibold mb-4">Multiple Registrations</h3>
+        
+        <FormField
+          label="Allow Multiple Registrations"
+          name="allowMultiple"
+          type="checkbox"
+          value={formData.allowMultiple}
+          onChange={(v) => updateField('allowMultiple', v)}
+          helpText="Allow members to register multiple times for this workshop (e.g., language courses, sessions)"
+        />
+
+        {formData.allowMultiple && (
+          <FormField
+            label="Maximum per Member"
+            name="maxPerMember"
+            type="number"
+            value={formData.maxPerMember || ''}
+            onChange={(v) => updateField('maxPerMember', v ? parseInt(v) : null)}
+            helpText="Optional: Set a maximum number of times a member can register (leave empty for unlimited)"
+          />
+        )}
+      </div>
     </GenericForm>
   );
 }

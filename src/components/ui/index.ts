@@ -6,3 +6,4 @@ export { GenericForm } from './GenericForm';
 export { Modal } from './Modal';
 export { SearchInput } from './SearchInput';
 export { StatusBadge } from './StatusBadge';
+export { Tooltip } from './Tooltip';

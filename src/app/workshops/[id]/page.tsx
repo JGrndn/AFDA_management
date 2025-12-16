@@ -128,19 +128,6 @@ export default function WorkshopDetailPage({ params }: { params: Promise<{ id: s
               </div>
             </Card>
           )}
-
-          {workshop.workshopRegistrations && workshop.workshopRegistrations.length > 0 && (
-            <Card title="Registrations">
-              <div className="text-center py-4">
-                <div className="text-3xl font-bold text-blue-600">
-                  {workshop.workshopRegistrations.length}
-                </div>
-                <div className="text-sm text-gray-600 mt-1">
-                  Total registrations
-                </div>
-              </div>
-            </Card>
-          )}
         </div>
       )}
     </div>

@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/prisma';
 import { Prisma } from '@/generated/prisma/client';
+import { extractScalarFields } from '../utils';
 
 export const workshopService = {
   async getAll(activeOnly = false) {
@@ -45,7 +46,11 @@ export const workshopService = {
   },
 
   async update(id: number, data: Prisma.WorkshopUpdateInput) {
-    return prisma.workshop.update({ where: { id }, data });
+    const cleanData = extractScalarFields(data) as Prisma.WorkshopUpdateInput;
+    return prisma.workshop.update({ 
+      where: { id }, 
+      data: cleanData 
+    });
   },
 
   async delete(id: number) {
