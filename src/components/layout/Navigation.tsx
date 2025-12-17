@@ -9,7 +9,6 @@ const navItems = [
   { href: '/families', label: 'Families', icon: '👨‍👩‍👧‍👦' },
   { href: '/seasons', label: 'Seasons', icon: '📅' },
   { href: '/workshops', label: 'Workshops', icon: '🎨' },
-  { href: '/registrations', label: 'Registrations', icon: '📝' },
   { href: '/payments', label: 'Payments', icon: '💰' },
 ];
 

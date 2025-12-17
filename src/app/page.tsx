@@ -22,13 +22,7 @@ export default function DashboardPage() {
       color: 'bg-blue-500',
       href: '/members',
     },
-    {
-      label: 'Registrations',
-      value: registrations.length,
-      icon: '📝',
-      color: 'bg-green-500',
-      href: '/registrations',
-    },
+    
     {
       label: 'Uncashed Checks',
       value: payments.filter((p: any) => p.paymentType === 'check').length,
