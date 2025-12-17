@@ -125,7 +125,7 @@ export default function DashboardPage() {
               {recentPayments.map((payment: any) => (
                 <li key={payment.id} className="py-3 flex justify-between items-center">
                   <div className="text-right">
-                    <div className="font-semibold">€{Number(payment.totalAmount).toFixed(2)}</div>
+                    <div className="font-semibold">€{Number(payment.amount).toFixed(2)}</div>
                     <div className="text-xs text-gray-500">
                       {new Date(payment.paymentDate).toLocaleDateString()}
                     </div>
