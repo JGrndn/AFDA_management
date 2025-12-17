@@ -140,29 +140,6 @@ export default function DashboardPage() {
       </div>
 
       <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card title="Quick Actions">
-          <div className="space-y-3">
-            <Button
-              className="w-full"
-              onClick={() => router.push('/members/new')}
-            >
-              Add New Member
-            </Button>
-            <Button
-              className="w-full"
-              onClick={() => router.push('/registrations/new')}
-            >
-              New Registration
-            </Button>
-            <Button
-              className="w-full"
-              onClick={() => router.push('/payments/new')}
-            >
-              Record Payment
-            </Button>
-          </div>
-        </Card>
-
         <Card title="System Status">
           <dl className="space-y-3">
             <div className="flex justify-between">
