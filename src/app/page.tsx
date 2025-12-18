@@ -61,8 +61,8 @@ export default function DashboardPage() {
         {stats.map((stat) => (
           <Card
             key={stat.label}
-            className="cursor-pointer hover:shadow-lg transition"
-            onClick={() => router.push(stat.href)}
+            className="hover:shadow-lg transition"
+            
           >
             <div className="flex items-center justify-between">
               <div>

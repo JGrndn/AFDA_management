@@ -2,7 +2,7 @@ import { prisma } from '@/lib/prisma';
 import type { Prisma } from '@/generated/prisma';
 
 export const paymentService = {
-  async getAll(filters?: { seasonId?: number; status?: string; uncashedOnly?: boolean }) {
+  async getAll(filters?: { seasonId?: number; status?: string; uncashedOnly?: boolean; showOnly?: boolean; }) {
     return prisma.payment.findMany({
       where: {
         ...(filters?.seasonId && { seasonId: filters.seasonId }),
@@ -11,11 +11,15 @@ export const paymentService = {
           cashingDate: null,
           paymentType: 'check',
         }),
+        ...(filters?.showOnly && {
+          showClientId: { not: null },
+        }),
       },
       include: {
         family: { include: { members: true } },
         member: true,
         season: true,
+        showClient: true
       },
       orderBy: { paymentDate: 'desc' },
     });
@@ -54,26 +58,38 @@ export const paymentService = {
     });
   },
 
+  async getByShowClient(showClientId: number) {
+    return prisma.payment.findMany({
+      where: { showClientId },
+      include: {
+        showClient: true,
+        season: true,
+      },
+      orderBy: { paymentDate: 'desc' },
+    });
+  },
+
   async create(data: {
     familyId?: number;
     memberId?: number;
-    seasonId: number;
+    seasonId?: number;
+    showClientId?: number;
     amount: number;
     paymentType: string;
     paymentDate: Date;
     reference?: string;
     notes?: string;
   }) {
-    // Calculer les dons si paiement > total dû
-    const totalDue = await this.calculateTotalDue(data.familyId, data.memberId, data.seasonId);
-    const totalPaid = await this.calculateTotalPaid(data.familyId, data.memberId, data.seasonId);
-    const donation = Math.max(0, (totalPaid + data.amount) - totalDue);
+    if (!data.showClientId && !data.seasonId) {
+      throw new Error('seasonId is required for non-show payments');
+    }
 
     const payment = await prisma.payment.create({
       data: {
         familyId: data.familyId,
         memberId: data.memberId,
         seasonId: data.seasonId,
+        showClientId: data.showClientId,
         amount: data.amount,
         paymentType: data.paymentType,
         paymentDate: data.paymentDate,
@@ -85,21 +101,29 @@ export const paymentService = {
         family: true,
         member: true,
         season: true,
+        showClient: true,
       },
     });
 
-    // Mettre à jour les dons de la saison si applicable
-    if (donation > 0) {
-      await prisma.season.update({
-        where: { id: data.seasonId },
-        data: {
-          totalDonations: { increment: donation },
-        },
-      });
-    }
+    if (data.seasonId){
+      // Calculer les dons si paiement > total dû
+      const totalDue = await this.calculateTotalDue(data.familyId, data.memberId, data.seasonId);
+      const totalPaid = await this.calculateTotalPaid(data.familyId, data.memberId, data.seasonId);
+      const donation = Math.max(0, (totalPaid + data.amount) - totalDue);
 
-    // Mettre à jour le statut des adhésions si nécessaire
-    await this.updateMembershipStatuses(data.familyId, data.memberId, data.seasonId);
+      // Mettre à jour les dons de la saison si applicable
+      if (donation > 0) {
+        await prisma.season.update({
+          where: { id: data.seasonId },
+          data: {
+            totalDonations: { increment: donation },
+          },
+        });
+      }
+
+      // Mettre à jour le statut des adhésions si nécessaire
+      await this.updateMembershipStatuses(data.familyId, data.memberId, data.seasonId);
+    }
 
     return payment;
   },

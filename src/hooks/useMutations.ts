@@ -263,3 +263,79 @@ export function useWorkshopMutations() {
     error: api.error,
   };
 }
+
+export function useShowMutations() {
+  const api = useApi();
+
+  const createShow = async (data: any) => {
+    return api.execute(
+      fetch('/api/shows', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      })
+    );
+  };
+
+  const updateShow = async (id: number, data: any) => {
+    return api.execute(
+      fetch(`/api/shows/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      })
+    );
+  };
+
+  const deleteShow = async (id: number) => {
+    return api.execute(
+      fetch(`/api/shows/${id}`, { method: 'DELETE' })
+    );
+  };
+
+  return {
+    createShow,
+    updateShow,
+    deleteShow,
+    isLoading: api.isLoading,
+    error: api.error,
+  };
+}
+
+export function useShowClientMutations() {
+  const api = useApi();
+
+  const createClient = async (data: any) => {
+    return api.execute(
+      fetch('/api/shows/clients', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      })
+    );
+  };
+
+  const updateClient = async (id: number, data: any) => {
+    return api.execute(
+      fetch(`/api/shows/clients/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      })
+    );
+  };
+
+  const deleteClient = async (id: number) => {
+    return api.execute(
+      fetch(`/api/shows/clients/${id}`, { method: 'DELETE' })
+    );
+  };
+
+  return {
+    createClient,
+    updateClient,
+    deleteClient,
+    isLoading: api.isLoading,
+    error: api.error,
+  };
+}

@@ -8,8 +8,10 @@ export async function GET(request: Request) {
     const familyId = searchParams.get('familyId');
     const memberId = searchParams.get('memberId');
     const seasonId = searchParams.get('seasonId');
+    const showClientId = searchParams.get('showClientId');
     const status = searchParams.get('status');
     const uncashedOnly = searchParams.get('uncashedOnly') === 'true';
+    const showOnly = searchParams.get('showOnly') === 'true';
 
     let payments;
 
@@ -23,11 +25,14 @@ export async function GET(request: Request) {
         parseInt(memberId),
         seasonId ? parseInt(seasonId) : undefined
       );
+    } else if (showClientId) {
+      payments = await paymentService.getByShowClient(parseInt(showClientId));
     } else {
       payments = await paymentService.getAll({
         seasonId: seasonId ? parseInt(seasonId) : undefined,
         status: status || undefined,
         uncashedOnly,
+        showOnly
       });
     }
 
