@@ -4,7 +4,8 @@ import { useState } from 'react';
 import { GenericForm, FormField } from '@/components/ui';
 import { useRegistrations } from '@/hooks/useRegistrations';
 import { useActiveSeason } from '@/hooks/useSeasons';
-import { PAYMENT_TYPES } from '@/lib/types';
+import type { PaymentType } from '@/lib/schemas/enums';
+import { getPaymentTypeOptions } from '@/lib/helpers/select-options';
 
 interface PaymentFormProps {
   initialData:any;
@@ -16,9 +17,12 @@ interface PaymentFormProps {
 export function PaymentForm({ onSubmit, onCancel, isLoading }: PaymentFormProps) {
   const { season: activeSeason } = useActiveSeason();
   const { registrations } = useRegistrations(activeSeason?.id);
+
+  const [paymentType, setPaymentType] = useState<PaymentType>('check');
+  const typeOptions = getPaymentTypeOptions();
   
   const [formData, setFormData] = useState({
-    paymentType: 'cash',
+    paymentType: paymentType,
     paymentDate: new Date().toISOString().split('T')[0],
     reference: '',
     notes: '',
@@ -94,11 +98,8 @@ export function PaymentForm({ onSubmit, onCancel, isLoading }: PaymentFormProps)
           name="paymentType"
           type="select"
           value={formData.paymentType}
-          onChange={(v) => updateField('paymentType', v)}
-          options={PAYMENT_TYPES.map((type) => ({
-            value: type,
-            label: type.charAt(0).toUpperCase() + type.slice(1),
-          }))}
+          onChange={(e) => setPaymentType(e.target.value as PaymentType)}
+          options={typeOptions}
           required
         />
 

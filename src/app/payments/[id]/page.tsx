@@ -7,8 +7,8 @@ import { usePaymentMutations } from '@/hooks/useMutations';
 import { Button, Card, StatusBadge, Modal, FormField } from '@/components/ui';
 import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
-
-const PAYMENT_TYPES = ['cash', 'check', 'transfer', 'card'] as const;
+import { getPaymentTypeOptions } from '@/lib/helpers/select-options';
+import { translatePaymentType } from '@/lib/i18n/translations';
 
 export default function PaymentDetailPage({ 
   params 
@@ -27,6 +27,8 @@ export default function PaymentDetailPage({
   const [cashingDate, setCashingDate] = useState(new Date().toISOString().split('T')[0]);
   const [validatingId, setValidatingId] = useState<number | null>(null);
   
+  const typeOptions = getPaymentTypeOptions();
+
   const [formData, setFormData] = useState({
     amount: '',
     paymentType: 'check',
@@ -128,7 +130,7 @@ export default function PaymentDetailPage({
         <div>
           <h1 className="text-3xl font-bold flex items-center gap-3">
             Payment #{payment.id}
-            <StatusBadge status={payment.status} />
+            <StatusBadge status={payment.status} type="payment" />
           </h1>
           {payment.reference && (
             <p className="text-gray-600 mt-1">Reference: {payment.reference}</p>
@@ -176,10 +178,7 @@ export default function PaymentDetailPage({
                 type="select"
                 value={formData.paymentType}
                 onChange={(v) => updateField('paymentType', v)}
-                options={PAYMENT_TYPES.map((type) => ({
-                  value: type,
-                  label: type.charAt(0).toUpperCase() + type.slice(1),
-                }))}
+                options={typeOptions}
                 required
               />
 
@@ -236,8 +235,7 @@ export default function PaymentDetailPage({
               </div>
               <div>
                 <dt className="text-sm font-medium text-gray-500">Payment Type</dt>
-                <dd className="mt-1 text-sm text-gray-900 capitalize">
-                  {payment.paymentType}
+                <dd className="mt-1 text-sm text-gray-900 capitalize">{translatePaymentType(payment.paymentType)}
                 </dd>
               </div>
               <div>
@@ -263,7 +261,7 @@ export default function PaymentDetailPage({
               <div>
                 <dt className="text-sm font-medium text-gray-500">Status</dt>
                 <dd className="mt-1">
-                  <StatusBadge status={payment.status} />
+                  <StatusBadge status={payment.status} type="payment" />
                 </dd>
               </div>
               {payment.notes && (
@@ -282,7 +280,7 @@ export default function PaymentDetailPage({
               <div>
                 <dt className="text-sm font-medium text-gray-500">Season</dt>
                 <dd className="mt-1 text-sm text-gray-900">
-                  {payment.season.label}
+                  {payment.season?.label}
                 </dd>
               </div>
               {payment.family && (

@@ -305,7 +305,7 @@ export function useShowMutations() {
 export function useShowClientMutations() {
   const api = useApi();
 
-  const createClient = async (data: any) => {
+  const createShowClient = async (data: any) => {
     return api.execute(
       fetch('/api/shows/clients', {
         method: 'POST',
@@ -315,7 +315,7 @@ export function useShowClientMutations() {
     );
   };
 
-  const updateClient = async (id: number, data: any) => {
+  const updateShowClient = async (id: number, data: any) => {
     return api.execute(
       fetch(`/api/shows/clients/${id}`, {
         method: 'PUT',
@@ -325,16 +325,16 @@ export function useShowClientMutations() {
     );
   };
 
-  const deleteClient = async (id: number) => {
+  const deleteShowClient = async (id: number) => {
     return api.execute(
       fetch(`/api/shows/clients/${id}`, { method: 'DELETE' })
     );
   };
 
   return {
-    createClient,
-    updateClient,
-    deleteClient,
+    createShowClient,
+    updateShowClient,
+    deleteShowClient,
     isLoading: api.isLoading,
     error: api.error,
   };

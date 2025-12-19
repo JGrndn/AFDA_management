@@ -29,12 +29,6 @@ export type RegistrationWithRelations = Prisma.RegistrationGetPayload<{
   };
 }>;
 
-export const PAYMENT_TYPES = ['cash', 'check', 'transfer', 'card'] as const;
-export const PAYMENT_STATUS = ['pending', 'cashed', 'cancelled'] as const;
-
-export type PaymentType = typeof PAYMENT_TYPES[number];
-export type PaymentStatus = typeof PAYMENT_STATUS[number];
-
 export interface PaymentStatusInfo {
   totalDue: number;
   totalPaid: number;

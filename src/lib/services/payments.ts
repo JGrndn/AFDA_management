@@ -1,15 +1,16 @@
+import { Prisma } from '@/generated/prisma';
 import { prisma } from '@/lib/prisma';
-import type { Prisma } from '@/generated/prisma';
+import type { MembershipStatus, PaymentStatus, PaymentType } from '@/lib/schemas/enums';
 
 export const paymentService = {
-  async getAll(filters?: { seasonId?: number; status?: string; uncashedOnly?: boolean; showOnly?: boolean; }) {
+  async getAll(filters?: { seasonId?: number; status?: PaymentStatus; uncashedOnly?: boolean; showOnly?: boolean; }) {
     return prisma.payment.findMany({
       where: {
         ...(filters?.seasonId && { seasonId: filters.seasonId }),
         ...(filters?.status && { status: filters.status }),
         ...(filters?.uncashedOnly && {
           cashingDate: null,
-          paymentType: 'check',
+          paymentType: 'check' as PaymentType,
         }),
         ...(filters?.showOnly && {
           showClientId: { not: null },
@@ -75,7 +76,7 @@ export const paymentService = {
     seasonId?: number;
     showClientId?: number;
     amount: number;
-    paymentType: string;
+    paymentType: PaymentType;
     paymentDate: Date;
     reference?: string;
     notes?: string;
@@ -95,7 +96,7 @@ export const paymentService = {
         paymentDate: data.paymentDate,
         reference: data.reference,
         notes: data.notes,
-        status: 'pending',
+        status: 'pending' as PaymentStatus,
       },
       include: {
         family: true,
@@ -145,7 +146,7 @@ export const paymentService = {
       where: { id },
       data: {
         cashingDate,
-        status: 'cashed',
+        status: 'cashed' as PaymentStatus,
       },
       include: { family: true, member: true, season: true },
     });
@@ -222,7 +223,7 @@ export const paymentService = {
         ...(familyId && { familyId }),
         ...(memberId && { memberId }),
         ...(seasonId && { seasonId }),
-        status: 'cashed',
+        status: 'cashed' as PaymentStatus,
       },
     });
 
@@ -257,7 +258,7 @@ export const paymentService = {
         ...(seasonId && { seasonId }),
       },
       data: {
-        status: newStatus,
+        status: newStatus as MembershipStatus,
       },
     });
   },

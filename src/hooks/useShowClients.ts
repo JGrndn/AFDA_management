@@ -6,7 +6,7 @@ export function useShowClients() {
   const { data, error, isLoading, mutate } = useSWR('/api/shows/clients', fetcher);
 
   return {
-    clients: data || [],
+    showClients: data || [],
     isLoading,
     isError: error,
     mutate,
@@ -20,7 +20,7 @@ export function useShowClient(id: number | null) {
   );
 
   return {
-    client: data,
+    showClient: data,
     isLoading,
     isError: error,
     mutate,

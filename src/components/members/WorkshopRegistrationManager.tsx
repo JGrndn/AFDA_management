@@ -246,7 +246,7 @@ export function WorkshopRegistrationManager({
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                 </svg>
                 <div className="text-sm text-yellow-800">
-                  <strong>No membership yet:</strong> Family discount ({activeRegistration.season.discountPercent}%) will apply once you create a membership for this season.
+                  <strong>No membership yet:</strong> Family discount ({activeSeason.discountPercent}%) will apply once you create a membership for this season.
                 </div>
               </div>
             </div>
@@ -259,7 +259,7 @@ export function WorkshopRegistrationManager({
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
                 <span className="text-sm text-green-800 font-medium">
-                  Family discount ({activeRegistration.season.discountPercent}%) applied - Member has active membership
+                  Family discount ({activeSeason.discountPercent}%) applied - Member has active membership
                 </span>
               </div>
             </div>
@@ -277,7 +277,7 @@ export function WorkshopRegistrationManager({
               className="w-full px-3 py-2 border border-gray-300 rounded-md"
             />
             <p className="text-xs text-gray-500 mt-1">
-              Set to 1 for first family member, 2+ for siblings ({activeRegistration.season.discountPercent}% workshop discount if membership exists)
+              Set to 1 for first family member, 2+ for siblings ({activeSeason.discountPercent}% workshop discount if membership exists)
             </p>
           </div>
 
@@ -287,7 +287,7 @@ export function WorkshopRegistrationManager({
               {workshops.map((workshop: any) => {
                 const price = workshop.workshopPrices?.[0]?.amount || 0;
                 const eligibleForDiscount = familyOrder > 1 && hasMembership;
-                const unitPrice = eligibleForDiscount ? price * (1 - activeRegistration.season.discountPercent/100) : price;
+                const unitPrice = eligibleForDiscount ? price * (1 - activeSeason.discountPercent/100) : price;
                 const quantity = workshopQuantities[workshop.id] || 0;
                 const totalPrice = unitPrice * quantity;
 

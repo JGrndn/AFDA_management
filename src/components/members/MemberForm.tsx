@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { GenericForm, FormField, Button, Modal } from '@/components/ui';
 import { useFamilies } from '@/hooks/useFamilies';
 
@@ -24,7 +24,6 @@ export function MemberForm({ initialData, onSubmit, onCancel, isLoading }: Membe
     guardianLastName: '',
     guardianEmail: '',
     guardianPhone: '',
-    guardianRelation: '',
     ...initialData,
   });
 
@@ -104,7 +103,6 @@ export function MemberForm({ initialData, onSubmit, onCancel, isLoading }: Membe
       delete data.guardianLastName;
       delete data.guardianEmail;
       delete data.guardianPhone;
-      delete data.guardianRelation;
     }
 
     await onSubmit(data);
@@ -220,14 +218,6 @@ export function MemberForm({ initialData, onSubmit, onCancel, isLoading }: Membe
                 value={formData.guardianPhone}
                 onChange={(v) => updateField('guardianPhone', v)}
                 required
-              />
-
-              <FormField
-                label="Relation"
-                name="guardianRelation"
-                value={formData.guardianRelation}
-                onChange={(v) => updateField('guardianRelation', v)}
-                placeholder="e.g., Parent, Legal Guardian"
               />
             </div>
           </>

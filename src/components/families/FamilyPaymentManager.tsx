@@ -1,11 +1,11 @@
-// components/families/FamilyPaymentManager.tsx
 'use client';
 
 import { useState, useEffect } from 'react';
 import { Card, Button, Modal, StatusBadge, Tooltip } from '@/components/ui';
 import { useRouter } from 'next/navigation';
-
-const PAYMENT_TYPES = ['cash', 'check', 'transfer', 'card'] as const;
+import { getPaymentTypeOptions } from '@/lib/helpers/select-options';
+import { PaymentType } from '@/lib/schemas/enums';
+import { translatePaymentType } from '@/lib/i18n/translations';
 
 interface PaymentStatusType {
   totalDue: number;
@@ -42,9 +42,12 @@ export function FamilyPaymentManager({ family, season, onUpdate }: FamilyPayment
   const [validatingId, setValidatingId] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  const [paymentType, setPaymentType] = useState<PaymentType>('check');
+  const typeOptions = getPaymentTypeOptions();
+
   const [formData, setFormData] = useState<FormDataType>({
     amount: '',
-    paymentType: 'check',
+    paymentType: paymentType,
     paymentDate: new Date().toISOString().split('T')[0],
     reference: '',
     notes: '',
@@ -90,7 +93,7 @@ export function FamilyPaymentManager({ family, season, onUpdate }: FamilyPayment
           familyId: family.id,
           seasonId: season.id,
           amount: parseFloat(formData.amount),
-          paymentType: formData.paymentType,
+          paymentType: paymentType,
           paymentDate: new Date(formData.paymentDate),
           reference: formData.reference || undefined,
           notes: formData.notes || undefined,
@@ -105,7 +108,7 @@ export function FamilyPaymentManager({ family, season, onUpdate }: FamilyPayment
       setIsModalOpen(false);
       setFormData({
         amount: '',
-        paymentType: 'check',
+        paymentType: paymentType,
         paymentDate: new Date().toISOString().split('T')[0],
         reference: '',
         notes: '',
@@ -224,15 +227,15 @@ export function FamilyPaymentManager({ family, season, onUpdate }: FamilyPayment
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-3">
               <div>
                 <div className="text-sm text-gray-600">Total Due</div>
-                <div className="text-lg font-bold">€{paymentStatus.totalDue.toFixed(2)}</div>
+                <div className="text-lg font-bold">{paymentStatus.totalDue.toFixed(2)} €</div>
               </div>
               <div>
                 <div className="text-sm text-gray-600">Total Paid</div>
-                <div className="text-lg font-bold">€{paymentStatus.totalPaid.toFixed(2)}</div>
+                <div className="text-lg font-bold">{paymentStatus.totalPaid.toFixed(2)} €</div>
               </div>
               <div>
                 <div className="text-sm text-gray-600">Balance</div>
-                <div className="text-lg font-bold">€{paymentStatus.balance.toFixed(2)}</div>
+                <div className="text-lg font-bold">{paymentStatus.balance.toFixed(2)} €</div>
               </div>
               <div>
                 <div className="text-sm text-gray-600">Status</div>
@@ -242,7 +245,7 @@ export function FamilyPaymentManager({ family, season, onUpdate }: FamilyPayment
             
             {paymentStatus.donation > 0 && (
               <div className="mt-2 p-2 bg-blue-100 border border-blue-300 rounded text-sm text-blue-800">
-                💝 Donation: €{paymentStatus.donation.toFixed(2)} - Thank you!
+                💝 Donation: {paymentStatus.donation.toFixed(2)} € - Thank you!
               </div>
             )}
           </div>
@@ -269,14 +272,14 @@ export function FamilyPaymentManager({ family, season, onUpdate }: FamilyPayment
                       <tr key={payment.id} className="hover:bg-gray-50 cursor-pointer"
                         onClick={() => router.push(`/payments/${payment.id}`)}>
                         <td className="px-4 py-2 text-sm">{payment.reference || '-'}</td>
-                        <td className="px-4 py-2 text-sm capitalize">{payment.paymentType}</td>
-                        <td className="px-4 py-2 text-sm font-semibold">€{Number(payment.amount).toFixed(2)}</td>
+                        <td className="px-4 py-2 text-sm capitalize">{translatePaymentType(payment.paymentType)}</td>
+                        <td className="px-4 py-2 text-sm font-semibold">{Number(payment.amount).toFixed(2)} €</td>
                         <td className="px-4 py-2 text-sm">{new Date(payment.paymentDate).toLocaleDateString()}</td>
                         <td className="px-4 py-2 text-sm">
                           {payment.cashingDate ? new Date(payment.cashingDate).toLocaleDateString() : '-'}
                         </td>
                         <td className="px-4 py-2">
-                          <StatusBadge status={payment.status} />
+                          <StatusBadge status={payment.status} type="payment"/>
                         </td>
                         <td className="px-4 py-2">{payment.notes && (
                               <Tooltip content={payment.notes} />
@@ -326,10 +329,10 @@ export function FamilyPaymentManager({ family, season, onUpdate }: FamilyPayment
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
             <h4 className="font-semibold text-blue-900 mb-2">{family.name}</h4>
             <div className="text-sm text-blue-800">
-              <div>Total due: €{paymentStatus.totalDue.toFixed(2)}</div>
-              <div>Already paid: €{paymentStatus.totalPaid.toFixed(2)}</div>
+              <div>Total due: {paymentStatus.totalDue.toFixed(2)} €</div>
+              <div>Already paid: {paymentStatus.totalPaid.toFixed(2)} €</div>
               <div className="font-semibold mt-1">
-                Balance: €{paymentStatus.balance.toFixed(2)}
+                Balance: {paymentStatus.balance.toFixed(2)} €
               </div>
             </div>
           </div>
@@ -353,13 +356,13 @@ export function FamilyPaymentManager({ family, season, onUpdate }: FamilyPayment
               Payment Type *
             </label>
             <select
-              value={formData.paymentType}
-              onChange={(e) => setFormData({ ...formData, paymentType: e.target.value })}
+              value={paymentType}
+              onChange={(e) => setPaymentType(e.target.value as PaymentType)}
               className="w-full px-3 py-2 border border-gray-300 rounded-md"
             >
-              {PAYMENT_TYPES.map((type) => (
-                <option key={type} value={type}>
-                  {type.charAt(0).toUpperCase() + type.slice(1)}
+              {typeOptions.map(option => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
                 </option>
               ))}
             </select>

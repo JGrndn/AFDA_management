@@ -3,19 +3,25 @@
 import { useState } from 'react';
 import { GenericForm, FormField } from '@/components/ui';
 
-interface ShowFormProps {
+interface ShowClientFormProps {
   initialData?: any;
   onSubmit: (data: any) => Promise<void>;
   onCancel?: () => void;
   isLoading?: boolean;
 }
 
-export function ShowForm({ initialData, onSubmit, onCancel, isLoading }: ShowFormProps) {
+export function ShowClientForm({ 
+  initialData, 
+  onSubmit, 
+  onCancel, 
+  isLoading 
+}: ShowClientFormProps) {
   const [formData, setFormData] = useState({
     name: '',
-    description: '',
-    date: new Date().toISOString().split('T')[0],
-    location: '',
+    contactName: '',
+    email: '',
+    phone: '',
+    address: '',
     ...initialData,
   });
 
@@ -30,14 +36,14 @@ export function ShowForm({ initialData, onSubmit, onCancel, isLoading }: ShowFor
 
   return (
     <GenericForm
-      title={initialData ? 'Edit Show' : 'New Show'}
+      title={initialData ? 'Edit Client' : 'New Client'}
       onSubmit={handleSubmit}
       onCancel={onCancel}
       isLoading={isLoading}
     >
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <FormField
-          label="Show Name"
+          label="Client Name"
           name="name"
           value={formData.name}
           onChange={(v) => updateField('name', v)}
@@ -45,28 +51,34 @@ export function ShowForm({ initialData, onSubmit, onCancel, isLoading }: ShowFor
         />
 
         <FormField
-          label="Date"
-          name="date"
-          type="date"
-          value={formData.date}
-          onChange={(v) => updateField('date', v)}
-          required
+          label="Contact Person"
+          name="contactName"
+          value={formData.contactName}
+          onChange={(v) => updateField('contactName', v)}
         />
 
         <FormField
-          label="Location"
-          name="location"
-          value={formData.location}
-          onChange={(v) => updateField('location', v)}
+          label="Email"
+          name="email"
+          type="email"
+          value={formData.email}
+          onChange={(v) => updateField('email', v)}
+        />
+
+        <FormField
+          label="Phone"
+          name="phone"
+          value={formData.phone}
+          onChange={(v) => updateField('phone', v)}
         />
 
         <div className="md:col-span-2">
           <FormField
-            label="Description"
-            name="description"
+            label="Address"
+            name="address"
             type="textarea"
-            value={formData.description}
-            onChange={(v) => updateField('description', v)}
+            value={formData.address}
+            onChange={(v) => updateField('address', v)}
           />
         </div>
       </div>

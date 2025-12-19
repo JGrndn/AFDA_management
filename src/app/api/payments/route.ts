@@ -1,6 +1,8 @@
 // src/app/api/payments/route.ts
 import { NextResponse } from 'next/server';
 import { paymentService } from '@/lib/services/payments';
+import { PaymentStatusSchema, PaymentTypeSchema } from '@/lib/schemas/enums';
+import z from 'zod';
 
 export async function GET(request: Request) {
   try {
@@ -9,9 +11,21 @@ export async function GET(request: Request) {
     const memberId = searchParams.get('memberId');
     const seasonId = searchParams.get('seasonId');
     const showClientId = searchParams.get('showClientId');
-    const status = searchParams.get('status');
+    const statusParam = searchParams.get('status');
     const uncashedOnly = searchParams.get('uncashedOnly') === 'true';
     const showOnly = searchParams.get('showOnly') === 'true';
+
+    let status = undefined;
+    if (statusParam) {
+      const result = PaymentStatusSchema.safeParse(statusParam);
+      if (!result.success) {
+        return NextResponse.json(
+          { error: 'Invalid payment status value', valid: PaymentStatusSchema.options },
+          { status: 400 }
+        );
+      }
+      status = result.data;
+    }
 
     let payments;
 
@@ -49,13 +63,14 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const data = await request.json();
+    const paymentType = PaymentTypeSchema.parse(data.paymentType);
 
     const payment = await paymentService.create({
       familyId: data.familyId || undefined,
       memberId: data.memberId || undefined,
       seasonId: data.seasonId,
       amount: data.amount,
-      paymentType: data.paymentType,
+      paymentType: paymentType,
       paymentDate: new Date(data.paymentDate),
       reference: data.reference,
       notes: data.notes,
@@ -63,7 +78,12 @@ export async function POST(request: Request) {
 
     return NextResponse.json(payment, { status: 201 });
   } catch (error: any) {
-    console.error('Error creating payment:', error);
+    if (error instanceof z.ZodError) {
+      return NextResponse.json(
+        { error: 'Validation failed', details: error },
+        { status: 400 }
+      );
+    }
     return NextResponse.json(
       { error: error.message || 'Failed to create payment' },
       { status: 500 }

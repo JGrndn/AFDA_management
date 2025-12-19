@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { usePayments } from '@/hooks/usePayments';
 import { DataTable, Button, StatusBadge, Card, Modal, Tooltip } from '@/components/ui';
+import { translatePaymentType } from '@/lib/i18n/translations';
 
 export default function PaymentsPage() {
   const router = useRouter();
@@ -75,13 +76,13 @@ export default function PaymentsPage() {
       key: 'paymentType',
       label: 'Type',
       render: (payment: any) => (
-        <span className="capitalize">{payment.paymentType}</span>
+        <span className="capitalize">{translatePaymentType(payment.paymentType)}</span>
       ),
     },
     {
       key: 'totalAmount',
       label: 'Amount',
-      render: (payment: any) => `€${Number(payment.totalAmount || payment.amount).toFixed(2)}`,
+      render: (payment: any) => `${Number(payment.totalAmount || payment.amount).toFixed(2)} €`,
     },
     {
       key: 'paymentDate',
@@ -97,7 +98,7 @@ export default function PaymentsPage() {
     {
       key: 'status',
       label: 'Status',
-      render: (payment: any) => <StatusBadge status={payment.status} />,
+      render: (payment: any) => <StatusBadge status={payment.status} type ="payment" />,
     },
     {
       key:'notes',
